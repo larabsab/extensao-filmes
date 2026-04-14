@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "TTDDFLIX",
+  "version": "1.0.0",
+  "description": "Assista filmes sincronizados com as amigas!",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Abrir Ttddflix"
+  },
+  "permissions": [
+    "storage", 
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "*://*.netflix.com/*",
+    "*://*.youtube.com/*",
+    "*://*.primevideo.com/*",
+    "*://*.disneyplus.com/*",
+    "*://*.twitch.tv/*",
+    "*://*.hbomax.com/*",
+    "*://*.globoplay.globo.com/*",
+    "*://*.tv.apple.com/*",
+    "*://drive.google.com/*",
+    "*://open.spotify.com/*", 
+    "*://*.hulu.com/*",
+    "*://*.paramountplus.com/*",
+    "*://*.crunchyroll.com/*",
+    "*://*.peacocktv.com/*",
+    "*://*.stremio.com/*",
+    "*://*.pluto.tv.com/*",
+    "*://*.tubitv.com/*",
+    "*://*.mubi.com/*",
+    "*://*.x.com/*",
+    "*://*.web.telegram.org/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.netflix.com/*",
+        "*://*.youtube.com/*",
+        "*://*.primevideo.com/*",
+        "*://*.disneyplus.com/*",
+        "*://*.twitch.tv/*",
+        "*://*.hbomax.com/*",
+        "*://*.globoplay.globo.com/*",
+        "*://*.tv.apple.com/*",
+        "*://drive.google.com/*",
+        "*://open.spotify.com/*", 
+        "*://*.hulu.com/*",
+        "*://*.paramountplus.com/*",
+        "*://*.crunchyroll.com/*",
+        "*://*.peacocktv.com/*",
+        "*://*.stremio.com/*",
+        "*://*.pluto.tv.com/*",
+        "*://*.tubitv.com/*",
+        "*://*.mubi.com/*",
+        "*://*.x.com/*",
+        "*://*.web.telegram.org/*"
+      ],
+      "js": ["src/content.jsx"]
+    }
+  ]
+}
