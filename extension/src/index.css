@@ -1,110 +1,13 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  /* Cores base da paleta Zinc */
+  --bg-main: #18181b;      /* Fundo principal escuro */
+  --bg-header: #27272a;    /* Barra superior mais clara (Ponto 3) */
+  --bg-card: #27272a;      /* Fundo dos botões de streaming */
+  --bg-card-hover: #3f3f46;/* Fundo quando passa o mouse */
+  
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --brand-color: #ec4899;
 }
 
 html, body {
@@ -112,11 +15,166 @@ html, body {
   padding: 0;
   width: 320px;
   height: fit-content;
-  min-height: 150px;
-  background-color: #18181b;
-  color: white;
-  font-family: sans-serif;
+  min-height: 200px;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  /* Ponto 1: Fonte moderna, nativa, limpa e profissional */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased; /* Deixa a fonte mais suave */
 }
 
+#root {
+  width: 100%;
+  height: 100%;
+}
 
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Ponto 3: Top bar levemente mais clara */
+.header {
+  background-color: var(--bg-header);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.btn-login {
+  background-color: transparent;
+  border: 1px solid #52525b;
+  color: var(--text-main);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-login:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #71717a;
+}
+
+.content {
+  padding: 20px 16px;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Ponto 6: Grid e Botões semelhantes ao Teleparty */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  /* Cria uma barra de rolagem se tiver muitos botões, sem esticar a extensão */
+  max-height: 350px;
+  overflow-y: auto;
+  padding-bottom: 10px;
+}
+
+/* Esconde a barra de rolagem feia, mas mantém a função */
+.services-grid::-webkit-scrollbar { width: 4px; }
+.services-grid::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+
+.service-btn {
+  background-color: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.03);
+  border-radius: 12px; /* Efeito Squircle moderno */
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.service-btn:hover {
+  background-color: var(--bg-card-hover);
+  transform: translateY(-2px); /* Efeito do botão subindo levemente */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.service-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.service-name {
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Estilos de botões genéricos e da Sala */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--brand-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.active-site-container {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.link-input {
+  flex: 1;
+  padding: 10px;
+  background-color: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-main);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.btn-copy {
+  padding: 0 14px;
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+}

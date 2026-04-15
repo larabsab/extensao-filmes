@@ -1,52 +1,46 @@
 import { useState, useEffect } from 'react';
+import './index.css';
+import logoImg from './assets/logo.png';
 
-const API_URL = 'http://localhost:3000/api';
+const WEB_LOGIN_URL = 'http://localhost:5173/login'; 
+
+const STREAMING_SERVICES = [
+  { id: 'netflix', name: 'Netflix', domain: 'netflix.com', url: 'https://www.netflix.com', color: '#E50914', short: 'N' },
+  { id: 'youtube', name: 'YouTube', domain: 'youtube.com', url: 'https://www.youtube.com', color: '#FF0000', short: 'Y' },
+  { id: 'prime', name: 'Prime', domain: 'primevideo.com', url: 'https://www.primevideo.com', color: '#00A8E1', short: 'P' },
+  { id: 'disney', name: 'Disney+', domain: 'disneyplus.com', url: 'https://www.disneyplus.com', color: '#113CCF', short: 'D+' },
+  { id: 'hbomax', name: 'HBO Max', domain: 'hbomax.com', url: 'https://www.max.com', color: '#5A2E90', short: 'M' }, 
+  { id: 'hulu', name: 'Hulu', domain: 'hulu.com', url: 'https://www.hulu.com', color: '#1CE783', short: 'H' },
+  { id: 'crunchyroll', name: 'Crunchyroll', domain: 'crunchyroll.com', url: 'https://www.crunchyroll.com', color: '#F47521', short: 'Cr' },
+  { id: 'twitch', name: 'Twitch', domain: 'twitch.tv', url: 'https://www.twitch.tv', color: '#9146FF', short: 'Tw' },
+  { id: 'appletv', name: 'Apple TV', domain: 'tv.apple.com', url: 'https://tv.apple.com', color: '#333333', short: '' },
+];
 
 function App() {
-  const [view, setView] = useState('menu'); // 'menu', 'login', ou 'party'
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [view, setView] = useState('menu'); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isOnSupportedSite, setIsOnSupportedSite] = useState(false);
 
-  // Verifica se a usuária já logou antes
   useEffect(() => {
+    // Verifica se já está logada
     if (typeof chrome !== 'undefined' && chrome.storage) {
       chrome.storage.local.get(['jwtToken'], (res) => {
         if (res.jwtToken) setIsLoggedIn(true);
       });
     }
+
+    // Verifica a aba atual
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const currentUrl = tabs[0]?.url || '';
+        const isSupported = STREAMING_SERVICES.some(service => currentUrl.includes(service.domain));
+        setIsOnSupportedSite(isSupported);
+      });
+    }
   }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error);
-
-      // Salva o passe de acesso e volta pro menu principal
-      if (typeof chrome !== 'undefined' && chrome.storage) {
-        chrome.storage.local.set({ jwtToken: data.token, username: data.username });
-      }
-      setIsLoggedIn(true);
-      setView('menu'); 
-    } catch (err) {
-      console.error(err);
-      setError('Usuário ou senha incorretos');
-    }
-  };
-
   const handleStartParty = () => {
-    // 1. Muda a telinha pro gerenciamento da sala
     setView('party');
-    // 2. Manda um sinal pro YouTube abrir a aba do Chat Lateral
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { type: "OPEN_CHAT" });
@@ -54,61 +48,92 @@ function App() {
     }
   };
 
+  const handleRedirect = (url) => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.update({ url: url });
+      window.close();
+    } else {
+      window.open(url, '_blank');
+    }
+  };
+
+  // Função que direciona pro site de Login
+  const openLoginPage = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: WEB_LOGIN_URL });
+    } else {
+      window.open(WEB_LOGIN_URL, '_blank');
+    }
+  };
+
   return (
-    <div style={{ padding: '0' }}>
+    <div className="app-container">
       
-      {/* Cabeçalho */}
-      <div style={{ padding: '15px', borderBottom: '1px solid #3f3f46', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0, fontSize: '20px', color: '#ec4899' }}>Tp</h2>
-        {!isLoggedIn && view !== 'login' && (
-          <button onClick={() => setView('login')} style={{ background: 'transparent', border: '1px solid #52525b', color: 'white', padding: '5px 15px', borderRadius: '5px', cursor: 'pointer' }}>
+      <div className="header">
+        
+        {/* Placeholder da Logo. Basta colocar sua imagem na pasta public e mudar o src */}
+        <div className="logo-container">
+           <img 
+              src={logoImg} 
+              alt="Logo" 
+              style={{ width: '50px', height: '50px', borderRadius: '6px' }} 
+              // Fallback caso a imagem não seja encontrada, exibe o texto antigo
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} 
+            />
+           <span style={{ display: 'none', fontWeight: 'bold', color: '#ec4899', fontSize: '18px' }}>Tp</span>
+        </div>
+
+        {!isLoggedIn && (
+          <button onClick={openLoginPage} className="btn-login">
             Log In
           </button>
         )}
       </div>
 
-      <div style={{ padding: '20px' }}>
+      <div className="content">
         
-        {/* TELA DE MENU */}
+        {/* TELA INICIAL */}
         {view === 'menu' && (
           <div>
-            <p style={{ fontSize: '14px', marginBottom: '20px' }}>Para usar a extensão, abra um vídeo em um site compatível.</p>
-            {isLoggedIn ? (
-              <button onClick={handleStartParty} style={{ width: '100%', padding: '12px', backgroundColor: '#ec4899', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-                Start the Party
-              </button>
+            {!isOnSupportedSite ? (
+              <>
+                <p className="subtitle">
+                  Choose a streaming site to start a party.
+                </p>
+                <div className="services-grid">
+                  {STREAMING_SERVICES.map(service => (
+                    <button key={service.id} onClick={() => handleRedirect(service.url)} className="service-btn" title={service.name}>
+                      <div className="service-icon" style={{ backgroundColor: service.color, color: service.color === '#FFFFFF' || service.color === '#F1EB1E' ? 'black' : 'white' }}>
+                        {service.short}
+                      </div>
+                      <span className="service-name">
+                        {service.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
             ) : (
-              <button onClick={() => setView('login')} style={{ width: '100%', padding: '12px', backgroundColor: '#3f3f46', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                Faça login para criar salas
-              </button>
+              <div className="active-site-container">
+                <p className="subtitle" style={{ marginBottom: '15px' }}>Você está em um site compatível!</p>
+                <button onClick={handleStartParty} className="btn-primary">
+                  Start the Party
+                </button>
+              </div>
             )}
           </div>
         )}
 
-        {/* TELA DE LOGIN */}
-        {view === 'login' && (
-          <div style={{ textAlign: 'center' }}>
-            <h3 style={{ marginTop: 0 }}>Bem-vinda de volta!</h3>
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '15px' }}>
-              <input type="text" placeholder="Username (ex: amiga1)" value={username} onChange={e => setUsername(e.target.value)} required style={{ padding: '10px', borderRadius: '5px', border: 'none', backgroundColor: '#27272a', color: 'white' }} />
-              <input type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '5px', border: 'none', backgroundColor: '#27272a', color: 'white' }} />
-              {error && <span style={{ color: '#ef4444', fontSize: '12px' }}>{error}</span>}
-              <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#ec4899', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '5px' }}>Login</button>
-            </form>
-            <button onClick={() => setView('menu')} style={{ background: 'none', border: 'none', color: '#aaa', textDecoration: 'underline', cursor: 'pointer', marginTop: '15px' }}>Voltar</button>
-          </div>
-        )}
-
-        {/* TELA DA SALA */}
+        {/* TELA DE GERENCIAMENTO DA SALA */}
         {view === 'party' && (
-          <div>
-            <h3 style={{ marginTop: 0 }}>Party Management</h3>
-            <p style={{ fontSize: '13px', color: '#aaa' }}>Compartilhe a URL para convidar as amigas:</p>
-            <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
-              <input type="text" readOnly value="https://ttddflix.com/join/12345" style={{ flex: 1, padding: '8px', backgroundColor: '#27272a', border: 'none', color: 'white', borderRadius: '5px', fontSize: '11px' }} />
-              <button style={{ padding: '8px 12px', backgroundColor: '#3b82f6', border: 'none', color: 'white', borderRadius: '5px', cursor: 'pointer' }}>Copy</button>
+          <div className="party-container">
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Party Management</h3>
+            <p style={{ fontSize: '13px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Share this link to invite friends:</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <input type="text" readOnly value="https://ttddflix.com/join/12345" className="link-input" />
+              <button className="btn-copy">Copy</button>
             </div>
-            <button onClick={() => setView('menu')} style={{ width: '100%', padding: '12px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', borderRadius: '5px', cursor: 'pointer' }}>
+            <button onClick={() => setView('menu')} className="btn-disconnect" style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '6px', cursor: 'pointer' }}>
               Disconnect
             </button>
           </div>
