@@ -178,3 +178,43 @@ html, body {
   font-weight: 500;
   cursor: pointer;
 }
+
+/* Login Prompt Container */
+.login-prompt-container {
+  background-color: rgba(236, 72, 153, 0.1);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+}
+
+.login-prompt-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Primary Login Button */
+.btn-login-primary {
+  background-color: var(--brand-color);
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.btn-login-primary:hover {
+  background-color: #d946a6;
+  opacity: 0.9;
+}

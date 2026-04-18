@@ -1,184 +1,428 @@
+/* Estilos para o contador */
 .counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+  font-size: 16px; /* Tamanho do texto em 16px */
+  padding: 5px 10px; /* Espaçamento interno: 5px vertical, 10px horizontal */
+  border-radius: 5px; /* Cantos arredondados de 5px */
+  color: var(--accent); /* Cor do texto usando variável CSS de acento */
+  background: var(--accent-bg); /* Fundo usando variável CSS de cor de acento */
+  border: 2px solid transparent; /* Borda de 2px transparente inicialmente */
+  transition: border-color 0.3s; /* Transição suave da borda em 0.3 segundos */
+  margin-bottom: 24px; /* Margem de 24px abaixo do elemento */
 
+  /* Estado quando o mouse passa sobre o elemento */
   &:hover {
-    border-color: var(--accent-border);
+    border-color: var(--accent-border); /* Muda a cor da borda ao passar o mouse */
   }
+  
+  /* Estado quando o elemento recebe foco via teclado */
   &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    outline: 2px solid var(--accent); /* Contorno de 2px ao receber foco */
+    outline-offset: 2px; /* Distância do contorno em 2px */
   }
 }
 
+/* Estilos para a seção hero com efeitos de perspectiva */
 .hero {
-  position: relative;
+  position: relative; /* Define posicionamento relativo para posicionar elementos filhos */
 
+  /* Aplica estilos comuns para os três elementos (base, framework, vite) */
   .base,
   .framework,
   .vite {
-    inset-inline: 0;
-    margin: 0 auto;
+    inset-inline: 0; /* Alinha horizontalmente de ambos os lados */
+    margin: 0 auto; /* Centraliza horizontalmente */
   }
 
+  /* Estilos para a imagem base */
   .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
+    width: 170px; /* Largura de 170px */
+    position: relative; /* Posicionamento relativo */
+    z-index: 0; /* Camada base inferior */
   }
 
+  /* Estilos para o framework e vite (camadas superiores) */
   .framework,
   .vite {
-    position: absolute;
+    position: absolute; /* Posicionamento absoluto para sobrepor outros elementos */
   }
 
+  /* Estilos específicos para a imagem do framework */
   .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
+    z-index: 1; /* Camada acima da base */
+    top: 34px; /* Posicionado 34px a partir do topo */
+    height: 28px; /* Altura de 28px */
+    /* Aplicar rotações em 3D para criar efeito de perspectiva */
     transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
       scale(1.4);
   }
 
+  /* Estilos específicos para a imagem vite */
   .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
+    z-index: 0; /* Camada atrás do framework */
+    top: 107px; /* Posicionado 107px a partir do topo */
+    height: 26px; /* Altura de 26px */
+    width: auto; /* Largura automática */
+    /* Rotações em 3D similares ao framework mas com escala menor */
     transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
       scale(0.8);
   }
 }
 
+/* Container central que utiliza flexbox para centralizar conteúdo */
 #center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
+  display: flex; /* Habilita flexbox */
+  flex-direction: column; /* Alinha itens verticalmente */
+  gap: 25px; /* Espaço de 25px entre os itens filhos */
+  place-content: center; /* Centraliza o conteúdo horizontalmente e verticalmente */
+  place-items: center; /* Centraliza os itens */
+  flex-grow: 1; /* Cresce para ocupar o espaço disponível */
 
+  /* Media query para telas de até 1024px */
   @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
+    padding: 32px 20px 24px; /* Reduz padding em resolução menor */
+    gap: 18px; /* Reduz o gap entre itens */
   }
 }
 
+/* Seção de próximas etapas com borda superior */
 #next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
+  display: flex; /* Habilita flexbox para layout horizontal */
+  border-top: 1px solid var(--border); /* Borda superior usando variável CSS */
+  text-align: left; /* Alinha texto à esquerda */
 
+  /* Estilos para elementos filhos diretos */
   & > div {
-    flex: 1 1 0;
-    padding: 32px;
+    flex: 1 1 0; /* Cada div ocupa espaço igual (flex grow, shrink, basis) */
+    padding: 32px; /* Padding interno de 32px */
+    
+    /* Em telas menores, reduz o padding */
     @media (max-width: 1024px) {
       padding: 24px 20px;
     }
   }
 
+  /* Estilos para ícones dentro de next-steps */
   .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
+    margin-bottom: 16px; /* Espaço de 16px abaixo do ícone */
+    width: 22px; /* Largura de 22px */
+    height: 22px; /* Altura de 22px */
   }
 
+  /* Em telas menores, muda o layout para coluna e centraliza texto */
   @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: column; /* Muda para direção vertical */
+    text-align: center; /* Centraliza o texto */
   }
 }
 
+/* ID para seção de documentação */
 #docs {
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--border); /* Borda direita usando variável CSS */
 
+  /* Em telas menores, remove borda direita e adiciona borda inferior */
   @media (max-width: 1024px) {
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
 }
 
+/* Estilos para lista de próximas etapas */
 #next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
+  list-style: none; /* Remove marcadores padrão da lista */
+  padding: 0; /* Remove padding padrão */
+  display: flex; /* Habilita flexbox para layout horizontal */
+  gap: 8px; /* Espaço de 8px entre itens */
+  margin: 32px 0 0; /* Margem de 32px no topo, 0 nos outros lados */
 
+  /* Estilos para logos dentro da lista */
   .logo {
-    height: 18px;
+    height: 18px; /* Altura de 18px */
   }
 
+  /* Estilos para links dentro da lista */
   a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
+    color: var(--text-h); /* Cor do texto usando variável CSS */
+    font-size: 16px; /* Tamanho de fonte de 16px */
+    border-radius: 6px; /* Cantos arredondados de 6px */
+    background: var(--social-bg); /* Fundo usando variável CSS */
+    display: flex; /* Habilita flexbox */
+    padding: 6px 12px; /* Padding de 6px vertical e 12px horizontal */
+    align-items: center; /* Centraliza verticalmente os itens */
+    gap: 8px; /* Espaço de 8px entre elementos internos */
+    text-decoration: none; /* Remove sublinhado padrão */
+    transition: box-shadow 0.3s; /* Transição suave da sombra */
 
+    /* Estado ao passar o mouse */
     &:hover {
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow); /* Adiciona sombra usando variável CSS */
     }
+    
+    /* Estilos para ícone dentro do link */
     .button-icon {
-      height: 18px;
-      width: 18px;
+      height: 18px; /* Altura de 18px */
+      width: 18px; /* Largura de 18px */
     }
   }
 
+  /* Em telas menores, ajusta o layout */
   @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
+    margin-top: 20px; /* Reduz margem superior */
+    flex-wrap: wrap; /* Permite quebra de linha */
+    justify-content: center; /* Centraliza itens */
 
+    /* Cada item ocupa 50% da largura menos a metade do gap */
     li {
       flex: 1 1 calc(50% - 8px);
     }
 
+    /* Links ocupam 100% da largura e centralizam o conteúdo */
     a {
       width: 100%;
       justify-content: center;
-      box-sizing: border-box;
+      box-sizing: border-box; /* Inclui padding e border no cálculo de largura */
     }
   }
 }
 
+/* ID para spacer (espaçador) */
 #spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
+  height: 88px; /* Altura de 88px */
+  border-top: 1px solid var(--border); /* Borda superior usando variável CSS */
+  
+  /* Em telas menores, reduz a altura */
   @media (max-width: 1024px) {
     height: 48px;
   }
 }
 
+/* Estilos para divisores com traços (ticks) */
 .ticks {
-  position: relative;
-  width: 100%;
+  position: relative; /* Posicionamento relativo para pseudo-elementos */
+  width: 100%; /* Ocupa 100% da largura */
 
+  /* Pseudo-elemento antes e depois */
   &::before,
   &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+    content: ''; /* Cria conteúdo vazio */
+    position: absolute; /* Posicionamento absoluto */
+    top: -4.5px; /* Posicionado -4.5px do topo */
+    border: 5px solid transparent; /* Borda de 5px transparente */
   }
 
+  /* Traço esquerdo */
   &::before {
-    left: 0;
-    border-left-color: var(--border);
+    left: 0; /* Posicionado à esquerda */
+    border-left-color: var(--border); /* Cor da borda esquerda usando variável CSS */
   }
+  
+  /* Traço direito */
   &::after {
-    right: 0;
-    border-right-color: var(--border);
+    right: 0; /* Posicionado à direita */
+    border-right-color: var(--border); /* Cor da borda direita usando variável CSS */
   }
+}
+
+/* Importa a fonte Poppins do Google Fonts em pesos 400, 600 e 700 */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* ========== RESET E DIMENSÕES GERAIS ========== */
+
+/* Reset de estilos padrão do navegador */
+* {
+  margin: 0; /* Remove margem padrão */
+  padding: 0; /* Remove padding padrão */
+  box-sizing: border-box; /* Inclui padding e border no cálculo de tamanho */
+  font-family: 'Poppins', sans-serif; /* Define fonte padrão como Poppins */
+}
+
+/* Dimensões do body e html */
+html,
+body {
+  width: 300px;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background-color: #a4998a;
+}
+
+#root {
+  width: 300px;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background-color: #a4998a;
+}
+
+/* ========== CONTAINER DO POPUP ========== */
+.popup-container {
+  padding: 16px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  background: #a4998a;
+}
+
+/* ========== HEADER ========== */
+.header {
+  display: flex; /* Habilita flexbox */
+  justify-content: space-between; /* Espaça itens nas pontas */
+  align-items: flex-end; /* Centraliza verticalmente */
+  width: 100%; /* Ocupa 100% da largura */
+  background: transparent; /* Fundo transparente */
+  gap: 0; /* Remove espaço entre os elementos do header */
+  margin: 0; /* Remove margem */
+  padding: 0; /* Remove padding */
+  line-height: 1; /* Reduz altura de linha para evitar espaçamento extra */
+}
+
+/* Imagem de título no header */
+.title-img {
+  height: 25px; /* Altura de 20px */
+  width: auto; /* Largura automática mantendo proporção */
+  object-fit: contain; /* Contém a imagem dentro do espaço */
+  display: block; /* Elemento em bloco */
+}
+
+/* Container esquerdo do header contendo Snoopy e Título */
+.header-left {
+  display: flex; /* Habilita flexbox */
+  align-items: center; /* Centraliza verticalmente */
+  gap: 5px; /* Espaço de 5px entre Snoopy e o Título */
+  flex-shrink: 0; /* Previne que o container seja comprimido */
+  margin: 0; /* Remove margem */
+  padding: 0; /* Remove padding */
+}
+
+/* Redefinição da altura do Snoopy mantendo proporção */
+.snoopy-img {
+  height: 45px; /* Altura de 45px */
+  width: auto; /* Largura automática */
+  object-fit: contain; /* Contém a imagem dentro do espaço */
+  flex-shrink: 0; /* Previne que o Snoopy seja comprimido */
+  display: block; /* Elemento em bloco */
+  margin: 0; /* Remove margem */
+  padding: 0; /* Remove padding */
+}
+
+/* ========== BOTÃO DE LOG IN ========== */
+.login-btn {
+  background: transparent; /* Fundo transparente */
+  border: 1.5px solid #eae2d5; /* Borda de 1.5px em cor clara */
+  border-radius: 12px; /* Cantos arredondados de 12px */
+  padding: 8px 16px; /* Padding de 8px vertical e 16px horizontal para proporcionalidade */
+  color: #eae2d5; /* Cor do texto em tom claro */
+  cursor: pointer; /* Cursor indica que é clicável */
+  transition: background-color 0.2s ease, color 0.2s ease; /* Transição suave de cores */
+  flex-shrink: 0; /* Previne que o botão seja comprimido */
+  white-space: nowrap; /* Evita quebra de linha do texto */
+}
+
+/* Estado ao passar o mouse - hover suave */
+.login-btn:hover {
+  background-color: #eae2d5; /* Fundo muda para cor clara */
+  color: #a4998a; /* Texto muda para cor escura */
+}
+
+/* Define fonte padrão novamente para garantir consistência */
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ========== DIVISOR DE ONDA ========== */
+.wave-divider {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  display: block;
+  margin-top: -3px;
+}
+
+/* ========== TEXTO DESCRITIVO ========== */
+.description-text {
+  color: #eae2d5; /* Cor do texto em tom claro */
+  font-size: 15px; /* Tamanho de fonte de 15px */
+  margin-top: 18px; /* Margem superior de 18px */
+  margin-bottom: 24px; /* Margem inferior de 24px para criar espaço entre o texto e os botões */
+  line-height: 1.5; /* Altura de linha de 1.5 para melhor legibilidade */
+  opacity: 0.9; /* Opacidade de 90% para tom mais suave */
+}
+
+/* ========== GRID DOS SERVIÇOS ========== */
+.services-grid {
+  gap: 12px; /* Espaço de 12px entre itens do grid */
+}
+
+/* ========== BOTÕES DE SERVIÇO ========== */
+.service-btn {
+  background: transparent;
+  border: 1.5px solid #eae2d5;
+  border-radius: 12px;
+  width: 80px;
+  height: 65px;
+  padding: 14px 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  transform: none !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.service-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1.5px; /* espessura da borda */
+  background: linear-gradient(135deg, #ff7ad9, #a36bff);
+  
+  /* máscara pra deixar só a borda visível */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.service-btn:hover::before {
+  opacity: 1;
+  box-shadow:
+    0 0 12px #ff7ad9,
+    0 0 24px #a36bff,
+    0 0 36px rgba(163, 107, 255, 0.6);
+}
+
+/* Estado ao passar o mouse */
+.service-btn:hover,
+.service-btn:focus-visible {
+  background: transparent;
+  background-image: none;
+  border-color: #d98cff;
+  box-shadow:
+    0 0 16px rgba(255, 122, 217, 0.75),
+    0 0 32px rgba(163, 107, 255, 0.6)
+}
+.service-btn:active,
+.service-btn:focus,
+.service-btn:not(:hover) {
+  background: transparent;
+  background-image: none;
+}
+
+/* ========== LOGOS DENTRO DOS BOTÕES ========== */
+.service-logo {
+  max-width: 80px; /* Largura máxima de 80px */
+  max-height: 35px; /* Altura máxima de 35px */
+  object-fit: contain; /* Contém a imagem dentro do espaço */
+  opacity: 0.9; /* Opacidade de 90% para tom suave */
+  pointer-events: none; /* Impede que a imagem capture eventos de mouse */
+  padding: 5px;
 }

@@ -1,145 +1,138 @@
 import { useState, useEffect } from 'react';
-import './index.css';
-import logoImg from './assets/logo.png';
+import './App.css';
+
+import waveImg from './assets/wave.png';
+import snoopyImg from './assets/snoopy.png';
+import titleImg from './assets/title.png';
+import netflixImg from './assets/netflix.png';
+import hboImg from './assets/hbo.png';
+import disneyImg from './assets/disney.png';
+import primevideoImg from './assets/primevideo.png';
+import globoplayImg from './assets/globoplay.png';
+import appletvImg from './assets/appletv.png';
+import youtubeImg from './assets/youtube.png';
+import driveImg from './assets/drive.png';
+import paramountImg from './assets/paramount.png';
+import twitchImg from './assets/twitch.png';
+import huluImg from './assets/hulu.png';
+import stremioImg from './assets/stremio.png';
+import crunchyrollImg from './assets/crunchyroll.png';
+import peacocktvImg from './assets/peacock.png';
+import plutoImg from './assets/plutotv.png';
+import tubiImg from './assets/tubi.png';
+import mubiImg from './assets/mubi.png';
+import spotifyImg from './assets/spotify.png';
+import telegramImg from './assets/telegram.png';
+import twitterImg from './assets/twitter.png';
 
 const WEB_LOGIN_URL = 'http://localhost:5173/login'; 
 
-const STREAMING_SERVICES = [
-  { id: 'netflix', name: 'Netflix', domain: 'netflix.com', url: 'https://www.netflix.com', color: '#E50914', short: 'N' },
-  { id: 'youtube', name: 'YouTube', domain: 'youtube.com', url: 'https://www.youtube.com', color: '#FF0000', short: 'Y' },
-  { id: 'prime', name: 'Prime', domain: 'primevideo.com', url: 'https://www.primevideo.com', color: '#00A8E1', short: 'P' },
-  { id: 'disney', name: 'Disney+', domain: 'disneyplus.com', url: 'https://www.disneyplus.com', color: '#113CCF', short: 'D+' },
-  { id: 'hbomax', name: 'HBO Max', domain: 'hbomax.com', url: 'https://www.max.com', color: '#5A2E90', short: 'M' }, 
-  { id: 'hulu', name: 'Hulu', domain: 'hulu.com', url: 'https://www.hulu.com', color: '#1CE783', short: 'H' },
-  { id: 'crunchyroll', name: 'Crunchyroll', domain: 'crunchyroll.com', url: 'https://www.crunchyroll.com', color: '#F47521', short: 'Cr' },
-  { id: 'twitch', name: 'Twitch', domain: 'twitch.tv', url: 'https://www.twitch.tv', color: '#9146FF', short: 'Tw' },
-  { id: 'appletv', name: 'Apple TV', domain: 'tv.apple.com', url: 'https://tv.apple.com', color: '#333333', short: '' },
+
+// Array com os botões
+const BOTOES_SERVICOS = [
+  { id: 'netflix', nome: 'Netflix', logo: netflixImg, link: 'https://www.netflix.com' },
+  { id: 'hbo', nome: 'HBO Max', logo: hboImg, link: 'https://www.hbomax.com' },
+  { id: 'disney', nome: 'Disney+', logo: disneyImg, link: 'https://www.disneyplus.com' },
+  { id: 'primevideo', nome: 'Prime Video', logo: primevideoImg, link: 'https://www.primevideo.com' },
+  { id: 'globoplay', nome: 'Globoplay', logo: globoplayImg, link: 'https://globoplay.globo.com' },
+  { id: 'appletv', nome: 'Apple Tv', logo: appletvImg, link: 'https://tv.apple.com' },
+  { id: 'youtube', nome: 'YouTube', logo: youtubeImg, link: 'https://www.youtube.com' },
+  { id: 'drive', nome: 'Drive', logo: driveImg, link: 'https://www.drive.google.com' },
+  { id: 'paramount', nome: 'Paramount+', logo: paramountImg, link: 'https://www.paramountplus.com' },
+  { id: 'twitch', nome: 'Twitch', logo: twitchImg, link: 'https://www.twitch.tv' },
+  { id: 'hulu', nome: 'Hulu', logo: huluImg, link: 'https://www.hulu.com' },
+  { id: 'stremio', nome: 'Stremio', logo: stremioImg, link: 'https://www.stremio.com' },
+  { id: 'crunchyroll', nome: 'Crunchyroll', logo: crunchyrollImg, link: 'https://www.crunchyroll.com' },
+  { id: 'peacocktv', nome: 'Peacock TV', logo: peacocktvImg, link: 'https://www.peacocktv.com' },
+  { id: 'plutotv', nome: 'Pluto TV', logo: plutoImg, link: 'https://www.pluto.tv.com' },
+  { id: 'tubi', nome: 'Tubi', logo: tubiImg, link: 'https://www.tubitv.com' },
+  { id: 'mubi', nome: 'Mubi', logo: mubiImg, link: 'https://www.mubi.com' },
+  { id: 'spotify', nome: 'Spotify', logo: spotifyImg, link: 'https://open.spotify.com' },
+  { id: 'telegram', nome: 'Telegram', logo: telegramImg, link: 'https://web.telegram.org' },
+  { id: 'twitter', nome: 'Twitter', logo: twitterImg, link: 'https://www.x.com' },
 ];
 
+
 function App() {
-  const [view, setView] = useState('menu'); 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isOnSupportedSite, setIsOnSupportedSite] = useState(false);
+  const [siteSuportado, setSiteSuportado] = useState(true);
 
+  // Verifica a URL atual quando o popup abre
   useEffect(() => {
-    // Verifica se já está logada
-    if (typeof chrome !== 'undefined' && chrome.storage) {
-      chrome.storage.local.get(['jwtToken'], (res) => {
-        if (res.jwtToken) setIsLoggedIn(true);
-      });
-    }
-
-    // Verifica a aba atual
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const currentUrl = tabs[0]?.url || '';
-        const isSupported = STREAMING_SERVICES.some(service => currentUrl.includes(service.domain));
-        setIsOnSupportedSite(isSupported);
+        const urlAtual = tabs[0]?.url || '';
+        // Lista rápida para checagem
+        const urlsSuportadas = ['netflix.com', 'max.com', 'disneyplus.com'];
+        const ehSuportado = urlsSuportadas.some(site => urlAtual.includes(site));
+        setSiteSuportado(ehSuportado);
       });
     }
   }, []);
 
-  const handleStartParty = () => {
-    setView('party');
-    if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, { type: "OPEN_CHAT" });
-      });
-    }
-  };
+  if (siteSuportado) {
+    return <PopupPrincipal />; // Tela para sites que a extensão alcança
+  }
 
-  const handleRedirect = (url) => {
+  return <PopupNaoSuportado />; // Tela para sites que a extensão NÃO alcança
+}
+
+// === TELA: SITE NÃO SUPORTADO ===
+function PopupNaoSuportado() {
+  
+  // Função para abrir links em nova guia
+  const abrirLink = (url) => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.update({ url: url });
-      window.close();
+      chrome.tabs.create({ url });
     } else {
       window.open(url, '_blank');
     }
   };
 
-  // Função que direciona pro site de Login
-  const openLoginPage = () => {
-    if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: WEB_LOGIN_URL });
-    } else {
-      window.open(WEB_LOGIN_URL, '_blank');
-    }
-  };
-
   return (
-    <div className="app-container">
-      
+    <div className="popup-container">
+      {/* HEADER: Snoopy + Título na esquerda, Log In na direita */}
       <div className="header">
-        
-        {/* Placeholder da Logo. Basta colocar sua imagem na pasta public e mudar o src */}
-        <div className="logo-container">
-           <img 
-              src={logoImg} 
-              alt="Logo" 
-              style={{ width: '50px', height: '50px', borderRadius: '6px' }} 
-              // Fallback caso a imagem não seja encontrada, exibe o texto antigo
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} 
-            />
-           <span style={{ display: 'none', fontWeight: 'bold', color: '#ec4899', fontSize: '18px' }}>Tp</span>
+        <div className="header-left">
+          <img src={snoopyImg} alt="Snoopy" className="snoopy-img" />
+          <img src={titleImg} alt="Título" className="title-img" />
         </div>
+        <button 
+          className="login-btn" 
+          onClick={() => abrirLink(WEB_LOGIN_URL)}
+        >
+          Log In
+        </button>
+      </div>
 
-        {!isLoggedIn && (
-          <button onClick={openLoginPage} className="btn-login">
-            Log In
+      {/* DIVISOR DE ONDA */}
+      <img src={waveImg} alt="Onda decorativa" className="wave-divider" />
+
+      {/* TEXTO DESCRITIVO */}
+      <p className="description-text">
+        To use the extension, please select one of the following services below.
+      </p>
+
+      {/* GRID DE BOTÕES (2 linhas x 3 colunas) */}
+      <div className="services-grid">
+        {BOTOES_SERVICOS.map((servico) => (
+          <button 
+            key={servico.id} 
+            className="service-btn"
+            onClick={() => abrirLink(servico.link)}
+          >
+            <img src={servico.logo} alt={`Logo ${servico.nome}`} className="service-logo" />
           </button>
-        )}
+        ))}
       </div>
+    </div>
+  );
+}
 
-      <div className="content">
-        
-        {/* TELA INICIAL */}
-        {view === 'menu' && (
-          <div>
-            {!isOnSupportedSite ? (
-              <>
-                <p className="subtitle">
-                  Choose a streaming site to start a party.
-                </p>
-                <div className="services-grid">
-                  {STREAMING_SERVICES.map(service => (
-                    <button key={service.id} onClick={() => handleRedirect(service.url)} className="service-btn" title={service.name}>
-                      <div className="service-icon" style={{ backgroundColor: service.color, color: service.color === '#FFFFFF' || service.color === '#F1EB1E' ? 'black' : 'white' }}>
-                        {service.short}
-                      </div>
-                      <span className="service-name">
-                        {service.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="active-site-container">
-                <p className="subtitle" style={{ marginBottom: '15px' }}>Você está em um site compatível!</p>
-                <button onClick={handleStartParty} className="btn-primary">
-                  Start the Party
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TELA DE GERENCIAMENTO DA SALA */}
-        {view === 'party' && (
-          <div className="party-container">
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Party Management</h3>
-            <p style={{ fontSize: '13px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Share this link to invite friends:</p>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-              <input type="text" readOnly value="https://ttddflix.com/join/12345" className="link-input" />
-              <button className="btn-copy">Copy</button>
-            </div>
-            <button onClick={() => setView('menu')} className="btn-disconnect" style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '6px', cursor: 'pointer' }}>
-              Disconnect
-            </button>
-          </div>
-        )}
-
-      </div>
+// Componente da tela principal (pode manter o seu atual aqui)
+function PopupPrincipal() {
+  return (
+    <div style={{ padding: '20px', color: 'white' }}>
+      <h1>A extensão está ativa!</h1>
     </div>
   );
 }
