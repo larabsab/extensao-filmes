@@ -5,7 +5,19 @@
   "description": "Assista filmes sincronizados com as amigas!",
   "action": {
     "default_popup": "index.html",
-    "default_title": "Abrir Ttddflix"
+    "default_title": "Abrir Ttddflix",
+    "default_icon": {
+      "16": "src/assets/snoopy.png",
+      "32": "src/assets/snoopy.png",
+      "48": "src/assets/snoopy.png",
+      "128": "src/assets/snoopy.png"
+    }
+  },
+  "icons": {
+    "16": "src/assets/snoopy.png",
+    "32": "src/assets/snoopy.png",
+    "48": "src/assets/snoopy.png",
+    "128": "src/assets/snoopy.png"
   },
   "permissions": [
     "storage", 
@@ -20,6 +32,7 @@
     "*://*.disneyplus.com/*",
     "*://*.twitch.tv/*",
     "*://*.hbomax.com/*",
+    "*://*.max.com/*",
     "*://*.globoplay.globo.com/*",
     "*://*.tv.apple.com/*",
     "*://drive.google.com/*",
@@ -28,12 +41,12 @@
     "*://*.paramountplus.com/*",
     "*://*.crunchyroll.com/*",
     "*://*.peacocktv.com/*",
-    "*://*.stremio.com/*",
-    "*://*.pluto.tv.com/*",
+    "*://web.strem.io/*",
+    "*://*.pluto.tv/*",
     "*://*.tubitv.com/*",
     "*://*.mubi.com/*",
-    "*://*.x.com/*",
-    "*://*.web.telegram.org/*"
+    "*://x.com/*",
+    "*://web.telegram.org/*"
   ],
   "background": {
     "service_worker": "src/background.js",
@@ -48,6 +61,7 @@
         "*://*.disneyplus.com/*",
         "*://*.twitch.tv/*",
         "*://*.hbomax.com/*",
+        "*://*.max.com/*",
         "*://*.globoplay.globo.com/*",
         "*://*.tv.apple.com/*",
         "*://drive.google.com/*",
@@ -56,12 +70,12 @@
         "*://*.paramountplus.com/*",
         "*://*.crunchyroll.com/*",
         "*://*.peacocktv.com/*",
-        "*://*.stremio.com/*",
-        "*://*.pluto.tv.com/*",
+        "*://web.strem.io/*",
+        "*://*.pluto.tv/*",
         "*://*.tubitv.com/*",
         "*://*.mubi.com/*",
-        "*://*.x.com/*",
-        "*://*.web.telegram.org/*"
+        "*://x.com/*",
+        "*://web.telegram.org/*"
       ],
       "js": ["src/content.jsx"]
     }

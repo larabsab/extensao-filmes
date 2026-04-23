@@ -37,37 +37,76 @@ const BOTOES_SERVICOS = [
   { id: 'globoplay', nome: 'Globoplay', logo: globoplayImg, link: 'https://globoplay.globo.com' },
   { id: 'appletv', nome: 'Apple Tv', logo: appletvImg, link: 'https://tv.apple.com' },
   { id: 'youtube', nome: 'YouTube', logo: youtubeImg, link: 'https://www.youtube.com' },
-  { id: 'drive', nome: 'Drive', logo: driveImg, link: 'https://www.drive.google.com' },
+  { id: 'drive', nome: 'Drive', logo: driveImg, link: 'https://drive.google.com' },
   { id: 'paramount', nome: 'Paramount+', logo: paramountImg, link: 'https://www.paramountplus.com' },
   { id: 'twitch', nome: 'Twitch', logo: twitchImg, link: 'https://www.twitch.tv' },
   { id: 'hulu', nome: 'Hulu', logo: huluImg, link: 'https://www.hulu.com' },
-  { id: 'stremio', nome: 'Stremio', logo: stremioImg, link: 'https://www.stremio.com' },
+  { id: 'stremio', nome: 'Stremio', logo: stremioImg, link: 'https://web.strem.io' },
   { id: 'crunchyroll', nome: 'Crunchyroll', logo: crunchyrollImg, link: 'https://www.crunchyroll.com' },
   { id: 'peacocktv', nome: 'Peacock TV', logo: peacocktvImg, link: 'https://www.peacocktv.com' },
-  { id: 'plutotv', nome: 'Pluto TV', logo: plutoImg, link: 'https://www.pluto.tv.com' },
+  { id: 'plutotv', nome: 'Pluto TV', logo: plutoImg, link: 'https://pluto.tv' },
   { id: 'tubi', nome: 'Tubi', logo: tubiImg, link: 'https://www.tubitv.com' },
   { id: 'mubi', nome: 'Mubi', logo: mubiImg, link: 'https://www.mubi.com' },
   { id: 'spotify', nome: 'Spotify', logo: spotifyImg, link: 'https://open.spotify.com' },
   { id: 'telegram', nome: 'Telegram', logo: telegramImg, link: 'https://web.telegram.org' },
-  { id: 'twitter', nome: 'Twitter', logo: twitterImg, link: 'https://www.x.com' },
+  { id: 'twitter', nome: 'Twitter', logo: twitterImg, link: 'https://x.com' },
 ];
 
 
 function App() {
-  const [siteSuportado, setSiteSuportado] = useState(true);
+  const [siteSuportado, setSiteSuportado] = useState(null);
 
   // Verifica a URL atual quando o popup abre
   useEffect(() => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const urlAtual = tabs[0]?.url || '';
-        // Lista rápida para checagem
-        const urlsSuportadas = ['netflix.com', 'max.com', 'disneyplus.com'];
-        const ehSuportado = urlsSuportadas.some(site => urlAtual.includes(site));
+        const hostAtual = (() => {
+          try {
+            return new URL(urlAtual).hostname.toLowerCase();
+          } catch {
+            return '';
+          }
+        })();
+
+        const hostsSuportados = [
+          'netflix.com',
+          'youtube.com',
+          'primevideo.com',
+          'disneyplus.com',
+          'twitch.tv',
+          'hbomax.com',
+          'max.com',
+          'globoplay.globo.com',
+          'tv.apple.com',
+          'drive.google.com',
+          'open.spotify.com',
+          'hulu.com',
+          'paramountplus.com',
+          'crunchyroll.com',
+          'peacocktv.com',
+          'web.strem.io',
+          'pluto.tv',
+          'tubitv.com',
+          'mubi.com',
+          'x.com',
+          'web.telegram.org',
+        ];
+
+        const ehSuportado = hostsSuportados.some(
+          (site) => hostAtual === site || hostAtual.endsWith(`.${site}`)
+        );
         setSiteSuportado(ehSuportado);
       });
+      return;
     }
+    setSiteSuportado(false); // Se não for possível acessar as tabs, assume que o site não é suportado
   }, []);
+
+ // Evita glitch visual enquanto o chrome.tabs.query ainda não respondeu.
+  if (siteSuportado === null) {
+    return null;
+  }
 
   if (siteSuportado) {
     return <PopupPrincipal />; // Tela para sites que a extensão alcança
