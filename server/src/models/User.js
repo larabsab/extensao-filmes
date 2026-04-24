@@ -1,15 +1,48 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: { 
-    type: String, 
-    required: true, 
-    unique: true, 
-    trim: true 
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    sparse: true
   },
-  passwordHash: { 
-    type: String, 
-    required: true 
+  username: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true
+  },
+  displayName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  googleId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true
+  },
+  appServicesUserId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true
+  },
+  authProviders: {
+    type: [String],
+    default: ['password']
+  },
+  icon: {
+    type: String,
+    trim: true,
+    default: 'quill'
+  },
+  passwordHash: {
+    type: String,
+    default: null
   }
 }, { timestamps: true });
 

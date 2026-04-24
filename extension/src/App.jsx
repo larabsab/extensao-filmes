@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 
 import waveImg from './assets/wave.png';
@@ -25,10 +25,8 @@ import spotifyImg from './assets/spotify.png';
 import telegramImg from './assets/telegram.png';
 import twitterImg from './assets/twitter.png';
 
-const WEB_LOGIN_URL = 'http://localhost:5173/login'; 
+const WEB_LOGIN_URL = 'http://localhost:5173/login';
 
-
-// Array com os botões
 const BOTOES_SERVICOS = [
   { id: 'netflix', nome: 'Netflix', logo: netflixImg, link: 'https://www.netflix.com' },
   { id: 'hbo', nome: 'HBO Max', logo: hboImg, link: 'https://www.hbomax.com' },
@@ -52,112 +50,118 @@ const BOTOES_SERVICOS = [
   { id: 'twitter', nome: 'Twitter', logo: twitterImg, link: 'https://x.com' },
 ];
 
+const HOSTS_SUPORTADOS = [
+  'netflix.com',
+  'youtube.com',
+  'primevideo.com',
+  'disneyplus.com',
+  'twitch.tv',
+  'hbomax.com',
+  'max.com',
+  'globoplay.globo.com',
+  'tv.apple.com',
+  'drive.google.com',
+  'open.spotify.com',
+  'hulu.com',
+  'paramountplus.com',
+  'crunchyroll.com',
+  'peacocktv.com',
+  'web.strem.io',
+  'pluto.tv',
+  'tubitv.com',
+  'mubi.com',
+  'x.com',
+  'web.telegram.org',
+];
+
+function abrirLinkExterno(url) {
+  if (typeof chrome !== 'undefined' && chrome.tabs) {
+    chrome.tabs.create({ url });
+  } else {
+    window.open(url, '_blank');
+  }
+}
 
 function App() {
   const [siteSuportado, setSiteSuportado] = useState(null);
+  const [temVideoNaPagina, setTemVideoNaPagina] = useState(false);
 
-  // Verifica a URL atual quando o popup abre
   useEffect(() => {
-    if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const urlAtual = tabs[0]?.url || '';
-        const hostAtual = (() => {
-          try {
-            return new URL(urlAtual).hostname.toLowerCase();
-          } catch {
-            return '';
-          }
-        })();
-
-        const hostsSuportados = [
-          'netflix.com',
-          'youtube.com',
-          'primevideo.com',
-          'disneyplus.com',
-          'twitch.tv',
-          'hbomax.com',
-          'max.com',
-          'globoplay.globo.com',
-          'tv.apple.com',
-          'drive.google.com',
-          'open.spotify.com',
-          'hulu.com',
-          'paramountplus.com',
-          'crunchyroll.com',
-          'peacocktv.com',
-          'web.strem.io',
-          'pluto.tv',
-          'tubitv.com',
-          'mubi.com',
-          'x.com',
-          'web.telegram.org',
-        ];
-
-        const ehSuportado = hostsSuportados.some(
-          (site) => hostAtual === site || hostAtual.endsWith(`.${site}`)
-        );
-        setSiteSuportado(ehSuportado);
-      });
+    if (typeof chrome === 'undefined' || !chrome.tabs) {
+      setSiteSuportado(false);
       return;
     }
-    setSiteSuportado(false); // Se não for possível acessar as tabs, assume que o site não é suportado
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabAtiva = tabs[0];
+      const urlAtual = tabAtiva?.url || '';
+      const hostAtual = (() => {
+        try {
+          return new URL(urlAtual).hostname.toLowerCase();
+        } catch {
+          return '';
+        }
+      })();
+
+      const ehSuportado = HOSTS_SUPORTADOS.some(
+        (site) => hostAtual === site || hostAtual.endsWith(`.${site}`)
+      );
+
+      setSiteSuportado(ehSuportado);
+
+      if (!ehSuportado || !tabAtiva?.id || !chrome.scripting) {
+        setTemVideoNaPagina(false);
+        return;
+      }
+
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabAtiva.id },
+          func: () => Boolean(document.querySelector('video')),
+        },
+        (results) => {
+          setTemVideoNaPagina(Boolean(results?.[0]?.result));
+        }
+      );
+    });
   }, []);
 
- // Evita glitch visual enquanto o chrome.tabs.query ainda não respondeu.
   if (siteSuportado === null) {
     return null;
   }
 
   if (siteSuportado) {
-    return <PopupPrincipal />; // Tela para sites que a extensão alcança
+    return <PopupPrincipal temVideoNaPagina={temVideoNaPagina} />;
   }
 
-  return <PopupNaoSuportado />; // Tela para sites que a extensão NÃO alcança
+  return <PopupNaoSuportado />;
 }
 
-// === TELA: SITE NÃO SUPORTADO ===
 function PopupNaoSuportado() {
-  
-  // Função para abrir links em nova guia
-  const abrirLink = (url) => {
-    if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url });
-    } else {
-      window.open(url, '_blank');
-    }
-  };
-
   return (
     <div className="popup-container">
-      {/* HEADER: Snoopy + Título na esquerda, Log In na direita */}
       <div className="header">
         <div className="header-left">
           <img src={snoopyImg} alt="Snoopy" className="snoopy-img" />
-          <img src={titleImg} alt="Título" className="title-img" />
+          <img src={titleImg} alt="Titulo" className="title-img" />
         </div>
-        <button 
-          className="login-btn" 
-          onClick={() => abrirLink(WEB_LOGIN_URL)}
-        >
+        <button className="login-btn" onClick={() => abrirLinkExterno(WEB_LOGIN_URL)}>
           Log In
         </button>
       </div>
 
-      {/* DIVISOR DE ONDA */}
       <img src={waveImg} alt="Onda decorativa" className="wave-divider" />
 
-      {/* TEXTO DESCRITIVO */}
       <p className="description-text">
         To use the extension, please select one of the following services below.
       </p>
 
-      {/* GRID DE BOTÕES (2 linhas x 3 colunas) */}
       <div className="services-grid">
         {BOTOES_SERVICOS.map((servico) => (
-          <button 
-            key={servico.id} 
+          <button
+            key={servico.id}
             className="service-btn"
-            onClick={() => abrirLink(servico.link)}
+            onClick={() => abrirLinkExterno(servico.link)}
           >
             <img src={servico.logo} alt={`Logo ${servico.nome}`} className="service-logo" />
           </button>
@@ -167,11 +171,179 @@ function PopupNaoSuportado() {
   );
 }
 
-// Componente da tela principal (pode manter o seu atual aqui)
-function PopupPrincipal() {
+function PopupPrincipal({ temVideoNaPagina }) {
+  const [etapa, setEtapa] = useState('auth');
+  const [painelAberto, setPainelAberto] = useState(false);
+  const [apenasHostControla, setApenasHostControla] = useState(false);
+  const [desativarReacoes, setDesativarReacoes] = useState(false);
+  const [showChatSidebar, setShowChatSidebar] = useState(true);
+  const [feedbackCopy, setFeedbackCopy] = useState('');
+
+  const roomUrl = 'https://www.teleparty.com/join/6ca0f';
+
+  const enviarMensagemAbaAtiva = (message) => {
+    if (typeof chrome === 'undefined' || !chrome.tabs) return;
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, message);
+      }
+    });
+  };
+
+  const iniciarParty = () => {
+    if (!temVideoNaPagina) return;
+    setEtapa('management');
+    enviarMensagemAbaAtiva({ type: 'OPEN_CHAT_SIDEBAR' });
+  };
+
+  const toggleSidebar = () => {
+    setShowChatSidebar((value) => {
+      const nextValue = !value;
+      enviarMensagemAbaAtiva({
+        type: nextValue ? 'OPEN_CHAT_SIDEBAR' : 'CLOSE_CHAT_SIDEBAR',
+      });
+      return nextValue;
+    });
+  };
+
+  const copiarLinkDaSala = async () => {
+    try {
+      await navigator.clipboard.writeText(roomUrl);
+      setFeedbackCopy('Copied!');
+      setTimeout(() => setFeedbackCopy(''), 1200);
+    } catch {
+      setFeedbackCopy('Could not copy');
+      setTimeout(() => setFeedbackCopy(''), 1200);
+    }
+  };
+
   return (
-    <div style={{ padding: '20px', color: 'white' }}>
-      <h1>A extensão está ativa!</h1>
+    <div className="popup-container">
+      <div className="supported-card">
+        <div className="supported-header">
+          <div className="supported-brand">
+            <img src={snoopyImg} alt="Snoopy" className="supported-brand-icon" />
+            <img src={titleImg} alt="TTDDFLIX" className="supported-brand-title" />
+          </div>
+
+          <button className="supported-login-btn" onClick={() => abrirLinkExterno(WEB_LOGIN_URL)}>
+            Log In
+          </button>
+        </div>
+
+        <img src={waveImg} alt="Onda decorativa" className="supported-wave-divider" />
+
+        {etapa === 'auth' ? (
+          <div className="supported-body">
+            <div className="supported-body-intro">
+              <span className="supported-eyebrow">Supported site detected</span>
+              <h2>Sign Up For Ttddflix</h2>
+              <p>Welcome to Ttddflix! Please sign in to start watching with friends.</p>
+            </div>
+
+            <button className="supported-primary-btn" onClick={() => abrirLinkExterno(WEB_LOGIN_URL)}>
+              Sign Up
+            </button>
+
+            <button className="supported-secondary-btn" onClick={() => setEtapa('create')}>
+              Continue as Guest
+            </button>
+          </div>
+        ) : etapa === 'create' ? (
+          <div className="supported-body">
+            <div className="supported-body-intro">
+              <span className="supported-eyebrow">Start a session</span>
+              <h2>Create a Ttddflix Room</h2>
+              <p>Create a room after opening a playable video in the current tab.</p>
+            </div>
+
+            <div className="supported-settings-panel">
+              <button
+                className="supported-settings-title-row"
+                onClick={() => setPainelAberto((value) => !value)}
+                aria-expanded={painelAberto}
+              >
+                <span>Party Settings</span>
+                <span className={`supported-caret ${painelAberto ? 'open' : ''}`} aria-hidden="true" />
+              </button>
+
+              {painelAberto ? (
+                <div className="supported-settings-list">
+                  <div className="supported-setting-item">
+                    <span>Only I have control</span>
+                    <button
+                      className={`supported-switch ${apenasHostControla ? 'on' : ''}`}
+                      onClick={() => setApenasHostControla((value) => !value)}
+                    >
+                      <span />
+                    </button>
+                  </div>
+
+                  <div className="supported-setting-item">
+                    <span>Disable reactions for party</span>
+                    <button
+                      className={`supported-switch ${desativarReacoes ? 'on' : ''}`}
+                      onClick={() => setDesativarReacoes((value) => !value)}
+                    >
+                      <span />
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <button
+              className={`supported-primary-btn ${!temVideoNaPagina ? 'disabled' : ''}`}
+              disabled={!temVideoNaPagina}
+              onClick={iniciarParty}
+            >
+              {temVideoNaPagina ? 'Start the party' : 'Select a video first'}
+            </button>
+
+            <p className="supported-help">
+              {temVideoNaPagina
+                ? 'Invite your friends after the room is created.'
+                : 'Open a video first, then activate the extension to start a party.'}
+            </p>
+          </div>
+        ) : (
+          <div className="supported-body">
+            <div className="supported-body-intro">
+              <span className="supported-eyebrow">Room active</span>
+              <h2>Party Management</h2>
+              <p>Share the invite link below so other people can join your session.</p>
+            </div>
+
+            <div className="supported-setting-item supported-setting-inline">
+              <span>Show chat sidebar</span>
+              <button
+                className={`supported-switch ${showChatSidebar ? 'on' : ''}`}
+                onClick={toggleSidebar}
+              >
+                <span />
+              </button>
+            </div>
+
+            <div className="supported-invite-row">
+              <input readOnly value={roomUrl} />
+              <button onClick={copiarLinkDaSala}>Copy</button>
+            </div>
+
+            {feedbackCopy ? <p className="supported-copy-feedback">{feedbackCopy}</p> : null}
+
+            <button
+              className="supported-disconnect-btn"
+              onClick={() => {
+                setEtapa('create');
+                enviarMensagemAbaAtiva({ type: 'CLOSE_CHAT_SIDEBAR' });
+              }}
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

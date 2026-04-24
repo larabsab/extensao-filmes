@@ -18,58 +18,96 @@ export default function Sidebar() {
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        width: '350px',
-        height: '100vh',
-        backgroundColor: '#18181b',
-        color: 'white',
-        zIndex: 2147483647,
-        boxShadow: '-5px 0 15px rgba(0,0,0,0.7)',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'sans-serif',
-      }}
-    >
+    <div style={sidebarStyle}>
       <div
         style={{
-          padding: '15px',
-          borderBottom: '1px solid #3f3f46',
+          padding: '14px 16px',
+          borderBottom: '1px solid #2f3341',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
-        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>TTDDFLIX Chat</h2>
+        <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Party Chat</h2>
         <button
           onClick={() => setIsOpen(false)}
-          style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '16px' }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#c7cede',
+            cursor: 'pointer',
+            fontSize: '16px',
+          }}
         >
-          x
+          ✕
         </button>
       </div>
 
-      <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
-        <p style={{ color: '#aaa', fontSize: '12px', textAlign: 'center' }}>Voce entrou na sala.</p>
+      <div style={{ padding: '18px 16px', flex: 1, overflowY: 'auto' }}>
+        <p style={{ color: '#9ca3b5', fontSize: '12px', lineHeight: 1.45 }}>
+          🍪 created the party 🎉
+          <br />
+          started playing the video at 14:55
+        </p>
       </div>
 
-      <div style={{ padding: '15px', borderTop: '1px solid #3f3f46' }}>
+        <div style={{ padding: '12px 16px', borderTop: '1px solid #2f3341' }}>
+          <div style={reactionRowStyle}>
+          {['🥰', '😡', '😭', '😂', '😲', '🔥'].map((emoji) => (
+            <button key={emoji} style={emojiButtonStyle}>
+              {emoji}
+            </button>
+          ))}
+        </div>
         <input
           type="text"
           placeholder="Digite uma mensagem..."
-          style={{
-            width: '100%',
-            padding: '10px',
-            borderRadius: '5px',
-            border: 'none',
-            backgroundColor: '#27272a',
-            color: 'white',
-          }}
+          style={messageInputStyle}
         />
       </div>
     </div>
   );
 }
+
+const sidebarStyle = {
+  position: 'fixed',
+  top: 0,
+  right: 0,
+  width: '340px',
+  height: '100vh',
+  background: '#181a20',
+  color: '#f4f6fc',
+  zIndex: 2147483647,
+  boxShadow: '-6px 0 20px rgba(0,0,0,0.65)',
+  display: 'flex',
+  flexDirection: 'column',
+  fontFamily: 'Poppins, sans-serif',
+};
+
+const reactionRowStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '6px',
+  marginBottom: '10px',
+  border: '1px solid #2e3240',
+  borderRadius: '8px',
+  padding: '6px',
+};
+
+const emojiButtonStyle = {
+  border: 'none',
+  background: 'transparent',
+  cursor: 'pointer',
+  fontSize: '22px',
+  lineHeight: 1,
+};
+
+const messageInputStyle = {
+  width: '100%',
+  padding: '10px 12px',
+  borderRadius: '8px',
+  border: '1px solid #2e3240',
+  backgroundColor: '#20242f',
+  color: '#f7f7f8',
+  outline: 'none',
+};
