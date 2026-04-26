@@ -26,6 +26,7 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
+    "http://localhost:5173/*",
     "*://*.netflix.com/*",
     "*://*.youtube.com/*",
     "*://*.primevideo.com/*",
@@ -79,5 +80,10 @@
       ],
       "js": ["src/content.jsx"]
     }
-  ]
+  ],
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:5173/*"
+    ]
+  }
 }

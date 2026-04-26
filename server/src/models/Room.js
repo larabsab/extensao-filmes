@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 
 const roomSchema = new mongoose.Schema({
+  roomCode: {
+    type: String,
+    required: true,
+    unique: true,
+    uppercase: true,
+    trim: true
+  },
   host: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User',

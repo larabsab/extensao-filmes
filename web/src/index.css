@@ -154,6 +154,14 @@ input {
   width: 100%;
 }
 
+.auth-form--section {
+  margin-top: 8px;
+}
+
+.auth-form--section-spaced {
+  margin-top: 22px;
+}
+
 .feedback {
   margin: 12px 0 0;
   padding: 12px 14px;
@@ -176,6 +184,10 @@ input {
 .input-group {
   width: 100%;
   margin-bottom: 16px;
+}
+
+.input-group--relaxed {
+  margin-bottom: 20px;
 }
 
 .input-label {
@@ -337,6 +349,47 @@ input {
   color: var(--paper-muted);
 }
 
+.form-section {
+  margin: 10px 0 24px;
+  padding: 18px;
+  border: 1px solid rgba(75, 65, 56, 0.16);
+  background: rgba(255, 251, 245, 0.5);
+}
+
+.form-section--password {
+  margin-top: 10px;
+}
+
+.form-section--password-reset {
+  margin-top: 6px;
+  padding: 22px 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 22%),
+    rgba(255, 251, 245, 0.58);
+}
+
+.form-section-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-section-copy strong {
+  color: var(--paper-ink);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.form-section-copy span {
+  color: var(--paper-soft);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
 .account-badge {
   display: flex;
   align-items: center;
@@ -356,6 +409,15 @@ input {
   border: 1px solid rgba(75, 65, 56, 0.18);
   background: rgba(255, 255, 255, 0.48);
   font-size: 1.65rem;
+}
+
+.account-badge__avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(75, 65, 56, 0.18);
+  background: rgba(255, 255, 255, 0.48);
 }
 
 .account-badge__label {
@@ -400,6 +462,47 @@ input {
   margin-top: 16px;
 }
 
+.avatar-upload {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.avatar-upload__preview {
+  width: 90px;
+  height: 90px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(78, 67, 56, 0.18);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.avatar-upload__preview--placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--paper-ink);
+  font-size: 2rem;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.avatar-upload__controls {
+  display: grid;
+  gap: 10px;
+}
+
+.avatar-upload__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.avatar-upload__input {
+  display: none;
+}
+
 .guest-avatar {
   width: 88px;
   height: 88px;
@@ -412,7 +515,7 @@ input {
   color: var(--paper-ink);
   font-size: 2rem;
   font-weight: 600;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 
 @media (max-width: 720px) {
@@ -434,6 +537,15 @@ input {
 
   .auth-logo--title {
     width: 144px;
+  }
+
+  .avatar-upload {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .avatar-upload__controls {
+    width: 100%;
   }
 
   .auth-kicker {

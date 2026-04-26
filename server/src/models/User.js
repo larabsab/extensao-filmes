@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   authProviders: {
     type: [String],
-    default: ['password']
+    default: []
   },
   icon: {
     type: String,
@@ -42,6 +42,31 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: {
     type: String,
+    default: null
+  },
+  passwordResetCodeHash: {
+    type: String,
+    default: null
+  },
+  passwordResetExpiresAt: {
+    type: Date,
+    default: null
+  },
+  firebaseUid: { 
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
+    default: null
+  },
+  avatarUrl: { 
+    type: String,
+    trim: true,
+    default: null
+  },
+  avatarPublicId: {
+    type: String,
+    trim: true,
     default: null
   }
 }, { timestamps: true });

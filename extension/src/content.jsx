@@ -1,53 +1,129 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import Sidebar from './Sidebar';
+import { getAdapterForLocation } from './content/adapters';
+import { createOverlayRoot } from './content/mountOverlay';
+import { pageStyles } from './content/pageStyles';
+import { bindVideoSync } from './content/videoSync';
 
-console.log("🎬 Watch Party: Script de conteúdo ativado!");
+console.log('Watch Party: content script active.');
 
-const rootElement = document.createElement('div');
-rootElement.id = 'ttddflix-root';
-document.body.appendChild(rootElement);
-
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <Sidebar />
-  </React.StrictMode>
-);
-
+const overlayHost = createOverlayRoot();
+const pageStyleTag = document.createElement('style');
+pageStyleTag.id = 'ttddflix-page-styles';
+pageStyleTag.textContent = pageStyles;
+let adapter = getAdapterForLocation();
 let videoElement = null;
+let suppressSyncUntil = 0;
+let isSidebarOpen = false;
 
-// Função para encontrar o vídeo na página
-const findVideo = () => {
-  const video = document.querySelector('video');
-  if (video && video !== videoElement) {
-    videoElement = video;
-    setupVideoListeners();
+function getOverlayContainer() {
+  return adapter.getMountTarget(document.fullscreenElement);
+}
+
+function mountOverlayHost() {
+  const container = getOverlayContainer();
+
+  if (!container || overlayHost.parentElement === container) {
+    return;
   }
-};
 
-// Ouve os eventos do player (Play, Pause, Seek)
-const setupVideoListeners = () => {
-  videoElement.onplay = () => {
-    chrome.runtime.sendMessage({ type: "VIDEO_EVENT", action: "play", time: videoElement.currentTime });
-  };
+  overlayHost.dataset.layout = adapter.getOverlayLayout();
+  container.appendChild(overlayHost);
+}
 
-  videoElement.onpause = () => {
-    chrome.runtime.sendMessage({ type: "VIDEO_EVENT", action: "pause", time: videoElement.currentTime });
-  };
+function unmountOverlayHost() {
+  if (overlayHost.parentElement) {
+    overlayHost.parentElement.removeChild(overlayHost);
+  }
+}
 
-  videoElement.onseeking = () => {
-    chrome.runtime.sendMessage({ type: "VIDEO_EVENT", action: "seek", time: videoElement.currentTime });
-  };
-};
+function ensurePageStyles() {
+  if (!document.head || document.getElementById(pageStyleTag.id)) {
+    return;
+  }
 
-// Procura por vídeos a cada 2 segundos (caso o site carregue o player depois)
-setInterval(findVideo, 2000);
+  document.head.appendChild(pageStyleTag);
+}
 
-// Ouve ordens vindas das amigas (via background script)
+function refreshAdapter() {
+  adapter = getAdapterForLocation();
+}
+
+function syncSidebarLayout() {
+  ensurePageStyles();
+
+  if (isSidebarOpen) {
+    overlayHost.dataset.layout = adapter.getOverlayLayout();
+    mountOverlayHost();
+    adapter.onSidebarOpen();
+    return;
+  }
+
+  adapter.onSidebarClose();
+  unmountOverlayHost();
+}
+
+function findVideo() {
+  refreshAdapter();
+
+  if (isSidebarOpen) {
+    overlayHost.dataset.layout = adapter.getOverlayLayout();
+    mountOverlayHost();
+  }
+
+  const nextVideo = adapter.findVideo();
+
+  if (nextVideo && nextVideo !== videoElement) {
+    videoElement = nextVideo;
+    bindVideoSync(() => videoElement, () => suppressSyncUntil);
+  }
+}
+
+function openPartyLayout() {
+  isSidebarOpen = true;
+  document.documentElement.classList.add('ttddflix-sidebar-open');
+  syncSidebarLayout();
+}
+
+function closePartyLayout() {
+  isSidebarOpen = false;
+  document.documentElement.classList.remove('ttddflix-sidebar-open');
+  syncSidebarLayout();
+}
+
+function handleFullscreenChange() {
+  if (isSidebarOpen) {
+    mountOverlayHost();
+  }
+}
+
+ensurePageStyles();
+document.addEventListener('fullscreenchange', handleFullscreenChange);
+window.addEventListener('resize', handleFullscreenChange);
+setInterval(findVideo, 1200);
+
+chrome.runtime.sendMessage({ type: 'GET_ROOM_STATE' }).then(({ roomState }) => {
+  if (roomState?.sidebarOpen) {
+    openPartyLayout();
+  }
+}).catch(() => {});
+
 chrome.runtime.onMessage.addListener((message) => {
-  if (!videoElement) return;
+  if (message?.type === 'OPEN_CHAT_SIDEBAR') {
+    openPartyLayout();
+    return;
+  }
 
-  if (message.action === "play") videoElement.play();
-  if (message.action === "pause") videoElement.pause();
-  if (message.action === "seek") videoElement.currentTime = message.time;
+  if (message?.type === 'CLOSE_CHAT_SIDEBAR') {
+    closePartyLayout();
+    return;
+  }
+
+  if (!videoElement) {
+    return;
+  }
+
+  suppressSyncUntil = Date.now() + 800;
+
+  if (message.action === 'play') videoElement.play();
+  if (message.action === 'pause') videoElement.pause();
+  if (message.action === 'seek') videoElement.currentTime = message.time;
 });

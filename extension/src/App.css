@@ -471,9 +471,10 @@ body {
 
 .supported-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 0;
+  gap: 10px;
 }
 
 .supported-brand {
@@ -512,6 +513,110 @@ body {
   flex-shrink: 0;
   white-space: nowrap;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.supported-session-wrap {
+  position: relative;
+  margin-left: auto;
+}
+
+.supported-session {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px 0 0;
+  text-align: left;
+}
+
+.supported-session-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(234, 226, 213, 0.55);
+  flex-shrink: 0;
+}
+
+.supported-session-avatar--fallback {
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.14);
+  color: #f2eee6;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.supported-session-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 1px;
+}
+
+.supported-session-copy span {
+  color: rgba(242, 238, 230, 0.74);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.supported-session-copy strong {
+  color: #f2eee6;
+  font-size: 13px;
+  line-height: 1.1;
+  max-width: 72px;
+  word-break: break-word;
+}
+
+.supported-session-caret {
+  width: 8px;
+  height: 8px;
+  margin-top: 9px;
+  border-right: 1.5px solid rgba(242, 238, 230, 0.82);
+  border-bottom: 1.5px solid rgba(242, 238, 230, 0.82);
+  transform: rotate(45deg);
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.supported-session-caret.open {
+  transform: rotate(-135deg) translate(-2px, -1px);
+}
+
+.supported-session-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 138px;
+  padding: 6px;
+  border: 1px solid rgba(234, 226, 213, 0.3);
+  border-radius: 12px;
+  background: rgba(94, 85, 75, 0.96);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
+  z-index: 3;
+}
+
+.supported-session-menu button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #f2eee6;
+  text-align: left;
+  font-size: 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.supported-session-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .supported-login-btn:hover {
@@ -698,37 +803,77 @@ body {
   font-size: 12px !important;
 }
 
+.supported-join-panel {
+  margin-top: 16px;
+}
+
+.supported-join-label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(242, 238, 230, 0.8);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .supported-invite-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   margin-top: 10px;
   border: 1.5px solid #eae2d5;
   border-radius: 12px;
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .supported-invite-row input {
   border: none;
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
   color: #f2eee6;
   font-size: 12px;
   padding: 11px 12px;
+  min-width: 0;
+  width: 100%;
+  outline: none;
+  box-shadow: none;
+}
+
+.supported-invite-row--join input {
+  text-transform: uppercase;
+}
+
+.supported-invite-row input::placeholder {
+  color: rgba(242, 238, 230, 0.52);
 }
 
 .supported-invite-row button {
   border: none;
   background: rgba(255, 255, 255, 0.12);
   color: #f2eee6;
+  min-width: 58px;
   padding: 0 14px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  border-left: 1px solid rgba(234, 226, 213, 0.24);
+}
+
+.supported-invite-row button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .supported-copy-feedback {
   margin-top: 6px !important;
   font-size: 12px !important;
   color: #b8d3ff !important;
+}
+
+.supported-error-text {
+  margin-top: 8px !important;
+  color: #ffd9d9 !important;
+  font-size: 12px !important;
 }
 
 .supported-disconnect-btn {

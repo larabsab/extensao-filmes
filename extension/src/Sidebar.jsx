@@ -1,113 +1,111 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
+
+const MOCK_PARTICIPANTS = [
+  { id: 'host', name: 'larinha', avatar: '🧚', accent: 'pink' },
+  { id: 'guest', name: 'bea', avatar: '☕', accent: 'neutral' }
+];
+
+const MOCK_MESSAGES = [
+  {
+    id: 'activity-1',
+    type: 'activity',
+    author: MOCK_PARTICIPANTS[0],
+    lines: ['created the party 🎉', 'started playing the video at 33:50']
+  }
+];
+
+const REACTION_OPTIONS = ['🥰', '😡', '😭', '😂', '😲', '🔥'];
 
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    if (typeof chrome === 'undefined' || !chrome.runtime) return;
+  const participantCount = useMemo(() => MOCK_PARTICIPANTS.length, []);
 
-    const handler = (message) => {
-      if (message?.type === 'OPEN_CHAT_SIDEBAR') setIsOpen(true);
-      if (message?.type === 'CLOSE_CHAT_SIDEBAR') setIsOpen(false);
-    };
-
-    chrome.runtime.onMessage.addListener(handler);
-    return () => chrome.runtime.onMessage.removeListener(handler);
-  }, []);
-
-  if (!isOpen) return null;
+  const closeSidebar = () => {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage({ type: 'SET_SIDEBAR_OPEN', isOpen: false }).catch(() => {});
+    }
+  };
 
   return (
-    <div style={sidebarStyle}>
-      <div
-        style={{
-          padding: '14px 16px',
-          borderBottom: '1px solid #2f3341',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Party Chat</h2>
-        <button
-          onClick={() => setIsOpen(false)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#c7cede',
-            cursor: 'pointer',
-            fontSize: '16px',
-          }}
-        >
-          ✕
-        </button>
-      </div>
+    <aside className="watchparty-sidebar" aria-label="Party sidebar">
+      <div className="watchparty-sidebar__shell">
+        <header className="watchparty-sidebar__header">
+          <div className="watchparty-sidebar__back" aria-hidden="true">
+            ⟶
+          </div>
 
-      <div style={{ padding: '18px 16px', flex: 1, overflowY: 'auto' }}>
-        <p style={{ color: '#9ca3b5', fontSize: '12px', lineHeight: 1.45 }}>
-          🍪 created the party 🎉
-          <br />
-          started playing the video at 14:55
-        </p>
-      </div>
-
-        <div style={{ padding: '12px 16px', borderTop: '1px solid #2f3341' }}>
-          <div style={reactionRowStyle}>
-          {['🥰', '😡', '😭', '😂', '😲', '🔥'].map((emoji) => (
-            <button key={emoji} style={emojiButtonStyle}>
-              {emoji}
+          <div className="watchparty-sidebar__brand">
+            <span className="watchparty-sidebar__brand-mark">Tp</span>
+            <button type="button" className="watchparty-sidebar__upgrade">
+              Upgrade
             </button>
+          </div>
+
+          <div className="watchparty-sidebar__tools">
+            <button type="button" className="watchparty-sidebar__tool">
+              <span>👥</span>
+              <strong>{participantCount}</strong>
+            </button>
+            <button type="button" className="watchparty-sidebar__tool">🔗</button>
+            <button type="button" className="watchparty-sidebar__tool">🪪</button>
+            <button type="button" className="watchparty-sidebar__profile" onClick={closeSidebar}>
+              {MOCK_PARTICIPANTS[0].avatar}
+            </button>
+          </div>
+        </header>
+
+        <div className="watchparty-sidebar__divider" />
+
+        <section className="watchparty-sidebar__messages">
+          {MOCK_MESSAGES.map((entry) => (
+            <article key={entry.id} className="watchparty-message watchparty-message--activity">
+              <div className="watchparty-message__avatar">{entry.author.avatar}</div>
+              <div className="watchparty-message__content">
+                <p className="watchparty-message__headline">
+                  <strong>{entry.author.name}</strong> {entry.lines[0]}
+                </p>
+                <p className="watchparty-message__subline">{entry.lines[1]}</p>
+              </div>
+            </article>
           ))}
-        </div>
-        <input
-          type="text"
-          placeholder="Digite uma mensagem..."
-          style={messageInputStyle}
-        />
+        </section>
+
+        <footer className="watchparty-sidebar__composer">
+          <div className="watchparty-sidebar__reactions">
+            {REACTION_OPTIONS.map((emoji) => (
+              <button key={emoji} type="button" className="watchparty-sidebar__reaction">
+                {emoji}
+              </button>
+            ))}
+          </div>
+
+          <div className="watchparty-sidebar__input-shell">
+            <textarea
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              className="watchparty-sidebar__input"
+              placeholder="Type a message..."
+              rows={1}
+            />
+
+            <div className="watchparty-sidebar__composer-footer">
+              <div className="watchparty-sidebar__composer-left">
+                <button type="button" className="watchparty-sidebar__mini-button">📹</button>
+                <button type="button" className="watchparty-sidebar__mini-button">🎙️</button>
+              </div>
+
+              <div className="watchparty-sidebar__composer-right">
+                <button type="button" className="watchparty-sidebar__mini-button">😊</button>
+                <button type="button" className="watchparty-sidebar__mini-button watchparty-sidebar__mini-button--tag">
+                  GIF
+                </button>
+                <button type="button" className="watchparty-sidebar__mini-button">✨</button>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
-    </div>
+    </aside>
   );
 }
-
-const sidebarStyle = {
-  position: 'fixed',
-  top: 0,
-  right: 0,
-  width: '340px',
-  height: '100vh',
-  background: '#181a20',
-  color: '#f4f6fc',
-  zIndex: 2147483647,
-  boxShadow: '-6px 0 20px rgba(0,0,0,0.65)',
-  display: 'flex',
-  flexDirection: 'column',
-  fontFamily: 'Poppins, sans-serif',
-};
-
-const reactionRowStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: '6px',
-  marginBottom: '10px',
-  border: '1px solid #2e3240',
-  borderRadius: '8px',
-  padding: '6px',
-};
-
-const emojiButtonStyle = {
-  border: 'none',
-  background: 'transparent',
-  cursor: 'pointer',
-  fontSize: '22px',
-  lineHeight: 1,
-};
-
-const messageInputStyle = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: '8px',
-  border: '1px solid #2e3240',
-  backgroundColor: '#20242f',
-  color: '#f7f7f8',
-  outline: 'none',
-};

@@ -1,11 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import './index.css';
-import { signInWithPopup } from "firebase/auth/web-extension";
-import { auth, googleProvider } from "./services/firebase";
+import {
+  confirmFirebasePasswordReset,
+  loginWithEmailPassword,
+  loginWithGoogle,
+  logoutFirebase,
+  registerWithEmailPassword,
+  requestPasswordReset,
+  uploadCurrentUserAvatar,
+  updateFirebaseUserPassword,
+  verifyResetCode
+} from './services/firebase';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+function getApiBaseUrl() {
+  const rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+  return rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 const STORAGE_KEY = 'ttdd-session';
+const GUEST_PROFILE_KEY = 'ttdd-guest-profile';
+const EXTENSION_ID = (import.meta.env.VITE_EXTENSION_ID || '').trim();
 const ICON_OPTIONS = [
   { id: 'quill', symbol: '✒️' },
   { id: 'candle', symbol: '🕯️' },
@@ -17,11 +32,21 @@ const ICON_OPTIONS = [
   { id: 'moon', symbol: '🌙' }
 ];
 const DEFAULT_ICON_ID = 'quill';
+const VIEW_BY_PATH = {
+  '/login': 'login',
+  '/signup': 'signup',
+  '/guest': 'guest',
+  '/forgot-password': 'forgot-password',
+  '/email-action': 'email-action',
+  '/account': 'account'
+};
 
 const emptyProfile = {
   email: '',
   displayName: '',
-  icon: DEFAULT_ICON_ID
+  icon: DEFAULT_ICON_ID,
+  avatarUrl: '',
+  avatarPublicId: ''
 };
 
 function getStoredSession() {
@@ -31,6 +56,17 @@ function getStoredSession() {
   } catch {
     return null;
   }
+}
+
+function getInitialView() {
+  const pathnameView = VIEW_BY_PATH[window.location.pathname] || 'login';
+  const params = new URLSearchParams(window.location.search);
+
+  if (pathnameView === 'email-action' && params.get('mode') === 'resetPassword') {
+    return 'email-action';
+  }
+
+  return pathnameView;
 }
 
 function storeSession(session) {
@@ -43,6 +79,22 @@ function clearSession() {
 
 function getIconSymbol(iconId) {
   return ICON_OPTIONS.find((option) => option.id === iconId)?.symbol || ICON_OPTIONS[0].symbol;
+}
+
+function isValidChromeExtensionId(extensionId) {
+  return /^[a-p]{32}$/.test(extensionId);
+}
+
+function syncExtensionSession(type, session) {
+  if (!window.chrome?.runtime?.sendMessage || !isValidChromeExtensionId(EXTENSION_ID)) {
+    return;
+  }
+
+  window.chrome.runtime.sendMessage(EXTENSION_ID, {
+    type,
+    token: session?.token,
+    user: session?.user || null
+  });
 }
 
 async function apiFetch(path, options = {}) {
@@ -65,80 +117,53 @@ async function apiFetch(path, options = {}) {
 }
 
 export default function App() {
-  const [view, setView] = useState('login');
+  const [view, setView] = useState(() => getInitialView());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
+  const [guestIcon, setGuestIcon] = useState(DEFAULT_ICON_ID);
   const [session, setSession] = useState(() => getStoredSession());
   const [profileForm, setProfileForm] = useState(emptyProfile);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [resetActionCode, setResetActionCode] = useState('');
+  const [resetActionEmail, setResetActionEmail] = useState('');
+  const [resetActionPassword, setResetActionPassword] = useState('');
+  const [resetActionPasswordConfirm, setResetActionPasswordConfirm] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);
 
   const user = session?.user || null;
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) {
-      setGoogleReady(false);
+    if (view === 'email-action') {
       return;
     }
 
-    let cancelled = false;
+    const nextPath = view === 'login' ? '/login' : `/${view}`;
 
-    const initializeGoogle = () => {
-      if (cancelled || !window.google?.accounts?.id) {
-        return false;
-      }
-
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (response) => {
-          resetFeedback();
-          setLoading(true);
-
-          try {
-            const data = await apiFetch('/auth/google', {
-              method: 'POST',
-              body: JSON.stringify({ credential: response.credential })
-            });
-
-            const nextSession = { token: data.token, user: data.user };
-            setSession(nextSession);
-            storeSession(nextSession);
-            setView('account');
-            setStatusMessage('Welcome in. Your Google account is now connected.');
-          } catch (error) {
-            setErrorMessage(error.message);
-          } finally {
-            setLoading(false);
-          }
-        }
-      });
-
-      setGoogleReady(true);
-      return true;
-    };
-
-    if (initializeGoogle()) {
-      return;
+    if (window.location.pathname !== nextPath) {
+      window.history.replaceState(null, '', nextPath);
     }
+  }, [view]);
 
-    const timer = window.setInterval(() => {
-      if (initializeGoogle()) {
-        window.clearInterval(timer);
-      }
-    }, 250);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
+  useEffect(() => {
+    const handlePopState = () => {
+      setView(getInitialView());
     };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   useEffect(() => {
     if (!session?.token) {
+      if (view === 'account') {
+        setView('login');
+      }
       return;
     }
 
@@ -161,7 +186,9 @@ export default function App() {
         setProfileForm({
           email: data.user.email || '',
           displayName: data.user.displayName || '',
-          icon: data.user.icon || DEFAULT_ICON_ID
+          icon: data.user.icon || DEFAULT_ICON_ID,
+          avatarUrl: data.user.avatarUrl || '',
+          avatarPublicId: data.user.avatarPublicId || ''
         });
         setView('account');
         storeSession(nextSession);
@@ -182,7 +209,7 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [session?.token]);
+  }, [session?.token, view]);
 
   useEffect(() => {
     if (!user) {
@@ -192,9 +219,110 @@ export default function App() {
     setProfileForm({
       email: user.email || '',
       displayName: user.displayName || '',
-      icon: user.icon || DEFAULT_ICON_ID
+      icon: user.icon || DEFAULT_ICON_ID,
+      avatarUrl: user.avatarUrl || '',
+      avatarPublicId: user.avatarPublicId || ''
     });
+    setAvatarFile(null);
+    setAvatarPreviewUrl('');
   }, [user]);
+
+  useEffect(() => {
+    if (!session?.token || !session?.user) {
+      return;
+    }
+
+    syncExtensionSession('LOGIN_SUCCESS', session);
+  }, [session?.token, session?.user]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
+  useEffect(() => {
+    if (view !== 'email-action') {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const actionCode = params.get('oobCode') || '';
+
+    if (!actionCode) {
+      setErrorMessage('O link de redefinicao esta incompleto ou invalido.');
+      return;
+    }
+
+    let active = true;
+
+    async function loadResetAction() {
+      resetFeedback();
+      setLoading(true);
+
+      try {
+        const accountEmail = await verifyResetCode(actionCode);
+
+        if (!active) {
+          return;
+        }
+
+        setResetActionCode(actionCode);
+        setResetActionEmail(accountEmail);
+      } catch {
+        if (!active) {
+          return;
+        }
+
+        setErrorMessage('Esse link de redefinicao e invalido ou expirou.');
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadResetAction();
+
+    return () => {
+      active = false;
+    };
+  }, [view]);
+
+  useEffect(() => {
+    const handleExtensionLogout = async (event) => {
+      if (event.source !== window || event.data?.type !== 'TTDDFLIX_EXTENSION_LOGOUT') {
+        return;
+      }
+
+      await logoutFirebase().catch(() => {});
+      clearSession();
+      setSession(null);
+      setProfileForm(emptyProfile);
+      setAvatarFile(null);
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+      setAvatarPreviewUrl('');
+      setPassword('');
+      setCurrentPassword('');
+      setNewPassword('');
+      setResetActionCode('');
+      setResetActionEmail('');
+      setResetActionPassword('');
+      setResetActionPasswordConfirm('');
+      setEmail('');
+      setStatusMessage('');
+      setErrorMessage('');
+      setView('login');
+      window.history.replaceState(null, '', '/login');
+    };
+
+    window.addEventListener('message', handleExtensionLogout);
+    return () => window.removeEventListener('message', handleExtensionLogout);
+  }, [avatarPreviewUrl]);
 
   const authHeading = useMemo(() => {
     if (view === 'signup') {
@@ -225,21 +353,15 @@ export default function App() {
     setLoading(true);
 
     try {
-      const path = view === 'login' ? '/auth/login' : '/auth/register';
-      const payload =
+      const data =
         view === 'login'
-          ? { email, password }
-          : {
+          ? await loginWithEmailPassword(email, password)
+          : await registerWithEmailPassword({
               email,
               password,
               displayName: email.split('@')[0] || 'Reader',
               icon: DEFAULT_ICON_ID
-            };
-
-      const data = await apiFetch(path, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+            });
 
       const nextSession = { token: data.token, user: data.user };
       setSession(nextSession);
@@ -262,7 +384,57 @@ export default function App() {
   const handleGuestSubmit = (e) => {
     e.preventDefault();
     resetFeedback();
+    sessionStorage.setItem(
+      GUEST_PROFILE_KEY,
+      JSON.stringify({
+        nickname: nickname.trim(),
+        icon: guestIcon
+      })
+    );
     setStatusMessage(`${nickname}, your guest access is ready.`);
+  };
+
+  const handleForgotPasswordRequest = async (e) => {
+    e.preventDefault();
+    resetFeedback();
+    setLoading(true);
+
+    try {
+      const data = await requestPasswordReset(email);
+      setStatusMessage(data.message);
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailActionReset = async (e) => {
+    e.preventDefault();
+    resetFeedback();
+
+    if (!resetActionCode) {
+      setErrorMessage('Esse link de redefinicao e invalido ou expirou.');
+      return;
+    }
+
+    if (resetActionPassword !== resetActionPasswordConfirm) {
+      setErrorMessage('A confirmacao da senha precisa ser igual a nova senha.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const data = await confirmFirebasePasswordReset(resetActionCode, resetActionPassword);
+      setResetActionPassword('');
+      setResetActionPasswordConfirm('');
+      setStatusMessage(data.message);
+    } catch (error) {
+      setErrorMessage(error.message || 'Nao foi possivel redefinir a senha.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleProfileSubmit = async (e) => {
@@ -275,11 +447,30 @@ export default function App() {
     setLoading(true);
 
     try {
+      if (newPassword) {
+        await updateFirebaseUserPassword({
+          email: profileForm.email,
+          currentPassword,
+          newPassword,
+          hasPasswordProvider: user?.authProviders?.includes('password')
+        });
+      }
+
+      let nextAvatarUrl = profileForm.avatarUrl || '';
+      let nextAvatarPublicId = profileForm.avatarPublicId || '';
+
+      if (avatarFile) {
+        const upload = await uploadCurrentUserAvatar(avatarFile);
+        nextAvatarUrl = upload.avatarUrl;
+        nextAvatarPublicId = upload.avatarPublicId;
+      }
+
       const payload = {
         email: profileForm.email,
         displayName: profileForm.displayName,
         icon: profileForm.icon,
-        password: newPassword
+        avatarUrl: nextAvatarUrl || null,
+        avatarPublicId: nextAvatarPublicId || null
       };
 
       const data = await apiFetch('/auth/me', {
@@ -293,7 +484,13 @@ export default function App() {
       const nextSession = { token: data.token, user: data.user };
       setSession(nextSession);
       storeSession(nextSession);
+      setCurrentPassword('');
       setNewPassword('');
+      setAvatarFile(null);
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+      setAvatarPreviewUrl('');
       setStatusMessage('Your changes have been saved.');
     } catch (error) {
       setErrorMessage(error.message);
@@ -303,11 +500,23 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    logoutFirebase().catch(() => {});
+    syncExtensionSession('LOGOUT_SUCCESS');
     clearSession();
     setSession(null);
     setProfileForm(emptyProfile);
+    setAvatarFile(null);
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+    setAvatarPreviewUrl('');
     setPassword('');
+    setCurrentPassword('');
     setNewPassword('');
+    setResetActionCode('');
+    setResetActionEmail('');
+    setResetActionPassword('');
+    setResetActionPasswordConfirm('');
     setEmail('');
     setView('login');
     setStatusMessage('');
@@ -321,21 +530,93 @@ export default function App() {
     }));
   };
 
-  const handleGoogleLogin = () => {
+  const handleProfileIconSelect = (iconId) => {
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+
+    setAvatarFile(null);
+    setAvatarPreviewUrl('');
+    setProfileForm((current) => ({
+      ...current,
+      icon: iconId,
+      avatarUrl: '',
+      avatarPublicId: ''
+    }));
+  };
+
+  const handleAvatarUpload = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Escolha uma imagem valida para o avatar.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('A imagem precisa ter no maximo 5 MB.');
+      event.target.value = '';
+      return;
+    }
+
     resetFeedback();
 
-    if (!GOOGLE_CLIENT_ID) {
-      setErrorMessage('Google login ainda nao esta configurado neste app.');
-      return;
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
     }
 
-    if (!window.google?.accounts?.id) {
-      setErrorMessage('Google login ainda nao foi carregado. Tente novamente em alguns segundos.');
-      return;
-    }
-
-    window.google.accounts.id.prompt();
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarFile(file);
+    setAvatarPreviewUrl(previewUrl);
+    setProfileForm((current) => ({
+      ...current,
+      avatarUrl: previewUrl
+    }));
+    event.target.value = '';
   };
+
+  const handleRemoveCustomAvatar = () => {
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+
+    setAvatarFile(null);
+    setAvatarPreviewUrl('');
+    setProfileForm((current) => ({
+      ...current,
+      avatarUrl: '',
+      avatarPublicId: ''
+    }));
+  };
+
+  const handleGoogleLogin = async () => {
+    resetFeedback();
+    setLoading(true);
+
+    try {
+      const data = await loginWithGoogle();
+      const nextSession = { token: data.token, user: data.user };
+
+      setSession(nextSession);
+      storeSession(nextSession);
+      setPassword('');
+      setNewPassword('');
+      setView('account');
+      setStatusMessage('Welcome in. Your Google account is now connected.');
+    } catch (error) {
+      setErrorMessage(error.message || 'Nao foi possivel entrar com Google.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const guestAvatarSymbol = getIconSymbol(guestIcon);
+  const accountAvatarUrl = avatarPreviewUrl || profileForm.avatarUrl;
 
   return (
     <div className="auth-page">
@@ -350,9 +631,9 @@ export default function App() {
                 <p className="auth-subtitle">{authHeading.subtitle}</p>
               </div>
 
-              <button type="button" className="btn-social" onClick={handleGoogleLogin} disabled={loading || !googleReady}>
+              <button type="button" className="btn-social" onClick={handleGoogleLogin} disabled={loading}>
                 <GoogleIcon />
-                {authHeading.socialLabel}
+                {loading ? 'Connecting...' : authHeading.socialLabel}
               </button>
 
               <div className="divider-container">
@@ -398,15 +679,172 @@ export default function App() {
                 {view === 'login' ? (
                   <>
                     <span>Don&apos;t have an account?</span>
-                    <button type="button" onClick={() => { resetFeedback(); setView('signup'); }} className="auth-link">Sign up</button>
-                    <button type="button" onClick={() => { resetFeedback(); setView('guest'); }} className="auth-link guest-link">Continue as Guest</button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetFeedback();
+                        setView('signup');
+                      }}
+                      className="auth-link"
+                    >
+                      Sign up
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetFeedback();
+                        setView('guest');
+                      }}
+                      className="auth-link guest-link"
+                    >
+                      Continue as Guest
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetFeedback();
+                        setView('forgot-password');
+                      }}
+                      className="auth-link guest-link"
+                    >
+                      Forgot password?
+                    </button>
                   </>
                 ) : (
                   <>
                     <span>Already have an account?</span>
-                    <button type="button" onClick={() => { resetFeedback(); setView('login'); }} className="auth-link">Sign in</button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetFeedback();
+                        setView('login');
+                      }}
+                      className="auth-link"
+                    >
+                      Sign in
+                    </button>
                   </>
                 )}
+              </div>
+            </div>
+          )}
+
+          {view === 'forgot-password' && (
+            <div className="auth-panel">
+              <div className="auth-heading">
+                <p className="auth-kicker">Password Recovery</p>
+                <img src="/title.png" alt="TTDD" className="auth-logo auth-logo--title" />
+                <h1 className="auth-title">Reset Password</h1>
+                <p className="auth-subtitle">
+                  Enter your email and we will send a secure password reset link.
+                </p>
+              </div>
+
+              <form onSubmit={handleForgotPasswordRequest} className="auth-form auth-form--section">
+                <div className="form-section-copy">
+                  <strong>Email reset</strong>
+                  <span>We will send the reset instructions to the address linked to your account.</span>
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Email</label>
+                  <input
+                    type="email"
+                    className="auth-input"
+                    placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn-secondary" disabled={loading}>
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+
+                {errorMessage && <p className="feedback feedback--error">{errorMessage}</p>}
+                {statusMessage && <p className="feedback feedback--success">{statusMessage}</p>}
+              </form>
+
+              <div className="auth-switch">
+                <span>Remembered your password?</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetFeedback();
+                    setView('login');
+                  }}
+                  className="auth-link"
+                >
+                  Sign in
+                </button>
+              </div>
+            </div>
+          )}
+
+          {view === 'email-action' && (
+            <div className="auth-panel">
+              <div className="auth-heading">
+                <p className="auth-kicker">Password Recovery</p>
+                <img src="/title.png" alt="TTDD" className="auth-logo auth-logo--title" />
+                <h1 className="auth-title">Choose a New Password</h1>
+                <p className="auth-subtitle">
+                  Finish your password reset here and return to the app with the same account details.
+                </p>
+              </div>
+
+              <div className="form-section form-section--password-reset">
+                <div className="form-section-copy">
+                  <strong>Reset linked to</strong>
+                  <span>{resetActionEmail || 'Checking your reset link...'}</span>
+                </div>
+
+                <form onSubmit={handleEmailActionReset} className="auth-form">
+                  <div className="input-group input-group--relaxed">
+                    <label className="input-label">New password</label>
+                    <input
+                      type="password"
+                      className="auth-input"
+                      value={resetActionPassword}
+                      onChange={(e) => setResetActionPassword(e.target.value)}
+                      placeholder="Choose a secure new password"
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group input-group--relaxed">
+                    <label className="input-label">Confirm new password</label>
+                    <input
+                      type="password"
+                      className="auth-input"
+                      value={resetActionPasswordConfirm}
+                      onChange={(e) => setResetActionPasswordConfirm(e.target.value)}
+                      placeholder="Type the same password again"
+                      required
+                    />
+                  </div>
+
+                  {errorMessage && <p className="feedback feedback--error">{errorMessage}</p>}
+                  {statusMessage && <p className="feedback feedback--success">{statusMessage}</p>}
+
+                  <button type="submit" className="btn-primary" disabled={loading || !resetActionCode}>
+                    {loading ? 'Updating...' : 'Save New Password'}
+                  </button>
+                </form>
+              </div>
+
+              <div className="auth-switch">
+                <span>After resetting, you can return to the sign in page.</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetFeedback();
+                    window.location.href = '/login';
+                  }}
+                  className="auth-link"
+                >
+                  Back to sign in
+                </button>
               </div>
             </div>
           )}
@@ -418,8 +856,8 @@ export default function App() {
               <h1 className="auth-title">Welcome!</h1>
               <p className="auth-subtitle">Enter a nickname to join the party.</p>
 
-              <div className="guest-avatar">
-                {nickname ? nickname.charAt(0).toUpperCase() : '?'}
+              <div className="guest-avatar" aria-hidden="true">
+                {guestAvatarSymbol}
               </div>
 
               <form onSubmit={handleGuestSubmit} className="auth-form">
@@ -436,6 +874,23 @@ export default function App() {
                   />
                 </div>
 
+                <div className="input-group">
+                  <label className="input-label">Guest icon</label>
+                  <div className="icon-picker" role="list">
+                    {ICON_OPTIONS.map((iconOption) => (
+                      <button
+                        key={iconOption.id}
+                        type="button"
+                        className={`icon-option ${guestIcon === iconOption.id ? 'icon-option--active' : ''}`}
+                        onClick={() => setGuestIcon(iconOption.id)}
+                        aria-pressed={guestIcon === iconOption.id}
+                      >
+                        {iconOption.symbol}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {statusMessage && <p className="feedback feedback--success">{statusMessage}</p>}
 
                 <button type="submit" className="btn-primary">Join Party</button>
@@ -443,7 +898,14 @@ export default function App() {
 
               <div className="auth-switch">
                 <span>Already have an account?</span>
-                <button type="button" onClick={() => { resetFeedback(); setView('login'); }} className="auth-link">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetFeedback();
+                    setView('login');
+                  }}
+                  className="auth-link"
+                >
                   Log in instead
                 </button>
               </div>
@@ -462,7 +924,11 @@ export default function App() {
               </div>
 
               <div className="account-badge">
-                <span className="account-badge__icon">{getIconSymbol(profileForm.icon)}</span>
+                {accountAvatarUrl ? (
+                  <img src={accountAvatarUrl} alt="Current avatar" className="account-badge__avatar" />
+                ) : (
+                  <span className="account-badge__icon">{getIconSymbol(profileForm.icon)}</span>
+                )}
                 <div>
                   <p className="account-badge__label">Current display name</p>
                   <strong>{profileForm.displayName || 'Unnamed Reader'}</strong>
@@ -476,7 +942,7 @@ export default function App() {
                     type="email"
                     className="auth-input"
                     value={profileForm.email}
-                    onChange={(e) => handleProfileChange('email', e.target.value)}
+                    readOnly
                     required
                   />
                 </div>
@@ -493,31 +959,98 @@ export default function App() {
                   />
                 </div>
 
-                <div className="input-group">
-                  <label className="input-label">New password</label>
-                  <input
-                    type="password"
-                    className="auth-input"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Leave blank to keep the current one"
-                  />
+                <div className="form-section form-section--password">
+                  <div className="form-section-copy">
+                    <strong>Password update</strong>
+                    <span>
+                      {user?.authProviders?.includes('password')
+                        ? 'Enter your current password first, then choose the new one.'
+                        : 'Set your first password here if you want to sign in without Google later.'}
+                    </span>
+                  </div>
+
+                  {user?.authProviders?.includes('password') && (
+                    <div className="input-group input-group--relaxed">
+                      <label className="input-label">Current password</label>
+                      <input
+                        type="password"
+                        className="auth-input"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Required before changing the password"
+                      />
+                    </div>
+                  )}
+
+                  <div className="input-group input-group--relaxed">
+                    <label className="input-label">New password</label>
+                    <input
+                      type="password"
+                      className="auth-input"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Leave blank to keep the current one"
+                    />
+                  </div>
                 </div>
 
                 <div className="input-group">
                   <label className="input-label">Profile icon</label>
+                  <div className="form-section-copy">
+                    <strong>Preset icons</strong>
+                    <span>Choose one of our department icons, or upload your own image right below.</span>
+                  </div>
                   <div className="icon-picker" role="list">
                     {ICON_OPTIONS.map((iconOption) => (
                       <button
                         key={iconOption.id}
                         type="button"
                         className={`icon-option ${profileForm.icon === iconOption.id ? 'icon-option--active' : ''}`}
-                        onClick={() => handleProfileChange('icon', iconOption.id)}
+                        onClick={() => handleProfileIconSelect(iconOption.id)}
                         aria-pressed={profileForm.icon === iconOption.id}
                       >
                         {iconOption.symbol}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <div className="form-section-copy">
+                    <strong>Custom image</strong>
+                    <span>Upload a square image for your profile. If you switch back to a preset, the uploaded avatar is removed.</span>
+                  </div>
+
+                  <div className="avatar-upload">
+                    {accountAvatarUrl ? (
+                      <img src={accountAvatarUrl} alt="Avatar preview" className="avatar-upload__preview" />
+                    ) : (
+                      <div className="avatar-upload__preview avatar-upload__preview--placeholder">
+                        {getIconSymbol(profileForm.icon)}
+                      </div>
+                    )}
+
+                    <div className="avatar-upload__controls">
+                      <label className="btn-secondary avatar-upload__button">
+                        Upload Image
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="avatar-upload__input"
+                          onChange={handleAvatarUpload}
+                        />
+                      </label>
+
+                      {accountAvatarUrl && (
+                        <button
+                          type="button"
+                          className="btn-secondary avatar-upload__button"
+                          onClick={handleRemoveCustomAvatar}
+                        >
+                          Use Preset Instead
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
